@@ -1,0 +1,169 @@
+from PyQt5.QtWidgets import QUndoCommand, QTableView
+from PyQt5.QtGui import QStandardItem, QStandardItemModel
+from PyQt5.QtCore import QModelIndex, Qt
+import traceback
+import sys
+
+
+class TableRemoveCommand(QUndoCommand):
+    
+    def __init__(self, widget: QTableView, items: {int: [QStandardItem]}, description: str,):
+        super(TableRemoveCommand, self).__init__(description)
+        self.widget = widget
+        self.items = items
+
+    def redo(self):
+        last_row = int
+        for row in sorted(self.items.keys(), reverse=True):
+            self.widget.model().takeRow(row)
+            last_row = row
+        self.widget.selectRow(last_row)
+
+    def undo(self):
+        last_row = int
+        for row, items in self.items.items():
+            # item = self.items[len(self.rows)-row-1]
+            self.widget.model().insertRow(
+                row,
+                [QStandardItem(item) for item in items]
+            )
+            self.widget.resizeRowToContents(row)
+            last_row = row
+        self.widget.selectRow(last_row)
+
+
+class TableInsertCommand(QUndoCommand):
+
+    def __init__(self, widget: QTableView, row: int, items: [QStandardItem], description: str):
+        super(TableInsertCommand, self).__init__(description)
+        self.widget = widget
+        self.items = items
+        self.row = row
+
+    def redo(self):
+
+        try:
+            self.widget.model().insertRow(
+                self.row,
+                [QStandardItem(item) for item in self.items]
+            )
+        except TypeError:
+            traceback.print_exc(file=sys.stdout)
+            print([item.text() for item in self.items])
+
+        self.widget.selectRow(self.row)
+        self.widget.resizeRowToContents(self.row)
+
+    def undo(self):
+        self.widget.model().removeRow(self.row)
+
+
+class DataChanged(QUndoCommand):
+    def __init__(self,
+                 widget: QStandardItemModel, newtext: str, oldtext: str,
+                 index: QModelIndex, description: str
+                 ):
+        super(DataChanged, self).__init__(description)
+        self.widget = widget
+        self.newText = newtext
+        self.oldText = oldtext
+        self.index = index
+
+    def redo(self):
+        self.widget.itemFromIndex(self.index).setText(self.newText)
+
+    def undo(self):
+        self.widget.itemFromIndex(self.index).setText(self.oldText)
+
+
+class TreeRemoveCommand(QUndoCommand):
+
+    def __init__(self, widget: QStandardItem, row: int, description: str, block: list):
+        super(TreeRemoveCommand, self).__init__(description)
+        self.widget = widget
+        self.row = row
+        self.item = None
+        self.block_value = None
+        self.block = block
+
+    def redo(self):
+        self.item = self.widget.takeRow(self.row)
+        self.block_value = self.block.pop(self.row)
+
+    def undo(self):
+        self.widget.insertRow(self.row, self.item)
+        self.block.insert(self.row, self.block_value)
+
+
+class TreeInsertCommand(QUndoCommand):
+
+    def __init__(self, widget: QStandardItem,
+                 block: list, row: int, items: dict, description: str,
+                 cols: dict
+                 ):
+        super(TreeInsertCommand, self).__init__(description)
+        self.widget = widget
+        self.row = row
+        self.items = items
+        self.block = block
+        self.cols = cols
+
+    def redo(self):
+
+        self.widget.insertRow(
+            self.row,
+            [
+                QStandardItem(
+                    self.items.get(col)
+                ) for col in self.cols.keys()
+            ]
+        )
+        self.block.insert(
+            self.row,
+            self.items
+        )
+
+    def undo(self):
+        self.widget.removeRow(self.row)
+        del self.block[self.row]
+
+
+# class TreeDataChanged(QUndoCommand):
+#     def __init__(self, widget: QStandardItemModel, newtext: str, oldtext: str, index: QModelIndex, description: str):
+#         super(TreeDataChanged, self).__init__(description)
+#         self.widget = widget
+#         self.newText = newtext
+#         self.oldText = oldtext
+#         self.index = index
+#
+#     def redo(self):
+#         self.widget.itemFromIndex(self.index).setText(self.newText)
+#
+#     def undo(self):
+#         self.widget.itemFromIndex(self.index).setText(self.oldText)
+
+class ReplaceCommand(QUndoCommand):
+    def __init__(self, widget: QTableView, new: str, old: str, index:QModelIndex, description: str):
+        super(ReplaceCommand, self).__init__(description)
+        self.widget = widget
+        self.new = new
+        self.old = old
+        self.index = index
+
+    def redo(self):
+        item = self.widget.model().itemFromIndex(self.index)
+        item.setData(self.new, Qt.DisplayRole)
+        self.widget.selectionModel().clearSelection()
+        self.widget.setCurrentIndex(self.index)
+
+    def undo(self):
+        item = self.widget.model().itemFromIndex(self.index)
+        item.setData(self.old, Qt.DisplayRole)
+        # self.widget.clearFocus()
+        self.widget.selectionModel().clearSelection()
+        self.widget.setCurrentIndex(self.index)
+        self.widget.setFocus()
+
+
+
+

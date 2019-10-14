@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+
+  <!-- Bootstrap CSS -->
+  <link href="https://rawcdn.githack.com/fgs76100/RP_Dashboard/86fa26912d1b4476ff381a8d7449a5f8868d9b96/css/rpd.css" rel="stylesheet">
+  <!-- <link rel="stylesheet" href="//code.jquery.com/ui/1.12.1/themes/smoothness/jquery-ui.css"> -->
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+  <!-- <link href="https://cdn.datatables.net/1.10.19/css/jquery.dataTables.min.css" rel="stylesheet"> -->
+  <!-- <link href="https://cdn.datatables.net/rowgroup/1.1.0/css/rowGroup.dataTables.min.css" rel="stylesheet"> -->
+  <!-- <link href="./css/jquery-ui.min.css" rel="stylesheet">
+  <link href="./css/jquery-ui.structure.min.css" rel="stylesheet"> -->
+
+  <title>Register Profile Dashborad</title>
+</head>
+
+<body>
+  <!-- <span class="glyphicon glyphicon-align-left" arial-hidden="true"></span> -->
+  <h5 class="p-3 mb-2 bg-info text-white">
+      Register Profile
+      <span class="badge badge-pill badge-warning" id="project"></span>
+      <!-- <span class="label label-default">RLE0945</span> -->
+      <span class="badge badge-pill badge-success" id="top_module"></span>
+  </h5>
+  <div class="container-fluid">
+    
+    <div class="row">
+      <nav class="col-md-1 d-none d-md-block bg-light sidebar">
+        <div class="nav flex-column nav-pills" id="v-pills-tab" role="tablist" aria-orientation="vertical">
+          <!-- <h5 class="">Reigster Profile</h5> -->
+          <!-- <a class="navbar-brand col-sm-3 col-md-2 mr-0">Register Profile</a> -->
+          <a class="nav-link active" id="RegProfile" data-toggle="pill" href="" role="tab" aria-controls="v-pills-home" aria-selected="true">
+            RegProfile
+          </a>
+          <a class="nav-link" id="RegAnalyzer" data-toggle="pill" href="#" role="tab" aria-controls="v-pills-profile" aria-selected="false">RegAnalyzer</a>
+          <a class="nav-link" id="Statistics" data-toggle="pill" href="#" role="tab" aria-controls="v-pills-messages" aria-selected="false">Statistics</a>
+          <!-- <a class="nav-link" id="v-pills-settings-tab" data-toggle="pill" href="#" role="tab" aria-controls="v-pills-settings" aria-selected="false">Settings</a> -->
+        </div>
+        
+      </nav>
+      <main class="col-md-8 ml-sm-auto col-lg-10 px-4" >
+
+        <div id="cardgroup">
+          
+        </div>
+        <div class="table-group">
+          <div class="row card" id="card-ip">
+            <div class="card-body">
+            <div class="row" id="ip-list">
+            </div>
+            </div>
+          </div>
+              <div class="row ip-list-input">
+                <div class="col input-group input-group">
+                  <div class="input-group-prepend">
+                    <span class="input-group-text">IP List Search</span>
+                  </div>
+                  <input type="text" class="form-control" aria-label="Sizing input" aria-describedby="inputGroup-sizing" placeholder="All" id="ip-search">
+                  <div class="input-group-append">
+                    <button class="btn btn-outline-secondary" type="button" id="ip-clear">Reset To All</button>
+                  </div>
+                </div>
+              </div>
+              
+
+          <div class="row" id="navbar">
+            <div class="col-md-3 input-group input-group mb-3">
+              <div class="input-group-prepend">
+                <span class="input-group-text">Search</span>
+              </div>
+              <input type="text" class="form-control" aria-label="Sizing example input" aria-describedby="inputGroup-sizing" id="table-search">
+            </div>
+            <p class="my-select">Entries: </p>
+            <select class="col-md-1 custom-select my-select" id="entry-select">
+              <option selected>4</option>
+              <option value="1">8</option>
+              <option value="2">16</option>
+              <option value="3">All</option>
+            </select>
+            <div class="col">
+              <nav aria-label="Page navigation">
+                <ul class="row justify-content-end pagination ">
+                  <li class="page-item"><a class="page-link" href="#">Frist</a></li>
+                  <li class="page-item"><a class="page-link" href="#">Previous</a></li>
+                  <li class="page-info"></li>
+                  <li class="page-item"><a class="page-link" href="#">Next</a></li>
+                  <li class="page-item"><a class="page-link" href="#">Last</a></li>
+                </ul>
+              </nav>  
+            </div>
+          </div>
+          <div class='row table-responsive-sm'>
+            <table class='table table-sm' id='register-profile'>
+              <thead>
+              </thead>
+              <tbody>
+              </tbody>
+            </table>
+          </div>
+
+          <div class="row justify-content-end">
+            <nav aria-label="Page navigation">
+              <ul class="pagination">
+                <li class="page-item"><a class="page-link" href="#">Frist</a></li>
+                <li class="page-item"><a class="page-link" href="#">Previous</a></li>
+                <li class="page-info"></li>
+                <li class="page-item"><a class="page-link" href="#">Next</a></li>
+                <li class="page-item"><a class="page-link" href="#">Last</a></li>
+              </ul>
+            </nav>  
+          </div>
+          
+        </div>
+      <div class="row" id="my-plot">
+        <canvas id="myChart"></canvas>
+      </div>
+      </main>
+      <nva class="col-md-1 bg-light">
+        <!--<button type="button" class="btn btn-secondary btn-sm" id="add-card">Add More</button>-->
+        <!--<button type="button" class="btn btn-secondary btn-sm" id="hide-all">Add More</button>-->
+        <!--<button type="button" class="btn btn-secondary btn-sm" id="show-all">Add More</button>-->
+        <ul class="nav flex-column card-nav">
+          <li class="nav-item">
+            <a class="nav-link active" href="#" id="add-card">AddMore</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="#" id="hide-all">HideAll</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="#" id="show-all">ShowAll</a>
+          </li>
+        </ul>
+        <ul class="nav flex-column table-nav">
+          <li class="nav-item">
+            <a class="nav-link active" href="#" id="hide-badge">HideBadge</a>
+          </li>
+
+        </ul>
+      </nva>
+    </div>
+  </div>
+  
+  <!-- end of container -->
+  <!-- <script type="text/javascript" src="https://code.jquery.com/ui/1.12.1/jquery-ui.min.js"></script> -->
+  <script src="https://code.jquery.com/jquery-3.3.1.js"></script>
+  <!-- <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script> -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js" integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1" crossorigin="anonymous"></script>
+  <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous"></script>
+  <script src="https://rawcdn.githack.com/fgs76100/RP_Dashboard/86fa26912d1b4476ff381a8d7449a5f8868d9b96/js/jquery-ui.min.js"></script>
+  <!-- <script src="https://cdn.datatables.net/1.10.19/js/jquery.dataTables.min.js"></script> -->
+  <!-- <script src="https://cdn.datatables.net/1.10.19/js/dataTables.bootstrap.min.js"></script> -->
+  <!-- <script src="https://cdn.datatables.net/rowgroup/1.1.0/js/dataTables.rowGroup.min.js"></script> -->
+  <!-- <script src="https://bartaz.github.io/sandbox.js/jquery.highlight.js"></script> -->
+  <!-- <script src="https://cdn.datatables.net/plug-ins/1.10.19/features/searchHighlight/dataTables.searchHighlight.min.js"></script> -->
+  <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.7.3/Chart.min.js"></script>
+  
+  
+  <!-- <script src="./js/my.js"></script> -->
+  <script type="text/javascript">
+     //python gen data
+  </script>
+  <script src="https://rawcdn.githack.com/fgs76100/RP_Dashboard/86fa26912d1b4476ff381a8d7449a5f8868d9b96/js/rpd.js"></script>
+  <!--<script src="./js/rpd.js"></script>-->
+
+</body>
+
+
+
+</html>

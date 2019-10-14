@@ -1,0 +1,4 @@
+include README.md LICENSE
+include RegisterProfileEditor/templates/*.html
+include RegisterProfileEditor/Views/*.py
+include RegisterProfileEditor/IOHandle/*.py
