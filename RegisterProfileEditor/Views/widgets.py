@@ -6,11 +6,12 @@ from PyQt5.QtWidgets import QTabWidget, QApplication, QStyle
 from PyQt5.QtCore import QModelIndex, Qt, QAbstractItemModel, QStringListModel, QSizeF, pyqtSignal, QRunnable
 from PyQt5.QtCore import QRegExp
 from PyQt5.QtGui import QValidator, QKeyEvent, QIntValidator, QTextCursor, QTextDocument, QAbstractTextDocumentLayout
-from PyQt5.QtGui import QTextCharFormat, QPainter, QFont, QPalette, QColor, QSyntaxHighlighter, QTextCursor
+from PyQt5.QtGui import QTextCharFormat, QPainter, QFont, QPalette, QColor, QMouseEvent, QTextCursor
 import re
 from functools import partial
 from .CommandStack import ReplaceCommand
 import json
+from collections import OrderedDict
 
 
 class HighlightDelegate(QStyledItemDelegate):
@@ -231,13 +232,15 @@ class FileDialog:
         )
         return directory
 
-    def asksavefile(self) -> (str, str):
+    def asksavefile(self, ftypes=None, initial_ftype=None) -> (str, str):
+        if ftypes is None:
+            ftypes = initial_ftype
         filename, ftype = QFileDialog.getSaveFileName(
             self.parent,
             "Save as",
             "",
-            "Excel Files (*.xls);;JSON Files (*.json);;All Files (*);;",
-            "Excel Files (*.xls)",
+            ftypes,
+            initial_ftype,
             options=self.options
         )
         return filename, ftype
@@ -282,6 +285,9 @@ class TextEdit(QTextEdit):
                 return
         else:
             super(TextEdit, self).keyPressEvent(event)
+
+    def text(self):
+        return self.toPlainText()
 
 
 class ListView(QListWidget):
@@ -581,9 +587,9 @@ class TreeView(QTreeView):
                 self.collapseAll()
                 return
             if key in (Qt.Key_S, Qt.Key_I):
-                item.setData(
-                    's', Qt.UserRole
-                )
+                # item.setData(
+                #     's', Qt.UserRole
+                # )
                 self.edit(index)
                 return
 
@@ -634,6 +640,14 @@ class TreeView(QTreeView):
                 else:
                     return QModelIndex()
         return super(TreeView, self).moveCursor(action, modifiers)
+
+    def mouseDoubleClickEvent(self, event: QMouseEvent):
+        index = self.currentIndex()
+        item = self.model().itemFromIndex(index)
+        if item.data(Qt.UserRole) == 'dialog':
+            self.doubleClicked.emit(index)
+            return
+        super(TreeView, self).mouseDoubleClickEvent(event)
 
     # def closeEditor(self, editor: QWidget, hint):
     #     if isinstance(editor, TextEdit):
@@ -851,3 +865,87 @@ class BackUpFile(QRunnable):
                 )
         except Exception as e:
             print('# [Warning] Backup file failed...')
+
+
+# class InputDialog(QDialog):
+#
+#     def __init__(self, title: str, inputs: dict, parent=None, ):
+#         super(InputDialog, self).__init__(parent)
+#         self.setWindowTitle(title)
+#         btn = QDialogButtonBox.Save | QDialogButtonBox.Cancel
+#         btnbox = QDialogButtonBox(btn, self)
+#         layout = QFormLayout()
+#         self.widgets = OrderedDict()
+#         for key, value in inputs.items():
+#             widget = QLineEdit(self)
+#             widget.setText(value)
+#             layout.addRow(
+#                 QLabel(key), widget
+#             )
+#             self.widgets[key] = widget
+#
+#         layout.addWidget(btnbox)
+#         self.setLayout(layout)
+#         btnbox.accepted.connect(self.accept)
+#         btnbox.rejected.connect(self.reject)
+#
+#     def get(self):
+#         save = False
+#         if self.exec_():
+#             save = True
+#
+#         return {
+#             key: widget.text() for key, widget in self.widgets.items()
+#         }, save
+
+
+class LineEdit(QLineEdit):
+
+    def __init__(self, validator=None, parent=None):
+        super(LineEdit, self).__init__(parent)
+        if validator == 'int':
+            self.setValidator(QIntValidator())
+        elif validator == 'hex':
+            self.setValidator(HexValidator())
+
+
+class InputDialog(QDialog):
+
+    def __init__(self, title: str, inputs: dict, parent=None, values: dict=None):
+        super(InputDialog, self).__init__(parent)
+        self.setWindowTitle(title)
+        btn = QDialogButtonBox.Save | QDialogButtonBox.Cancel
+        btnbox = QDialogButtonBox(btn, self)
+        layout = QFormLayout()
+        self.widgets = OrderedDict()
+        if values is None:
+            values = {}
+        for key, config in inputs.items():
+            text = values.get(key, config.get('default', ''))
+            validator = config.get('type', None)
+            widget = config.get('widget', None)
+            if widget == 'textEdit':
+                widget = TextEdit(parent=self)
+                widget.setText(text)
+            else:
+                widget = LineEdit(parent=self, validator=validator)
+                widget.setText(text)
+            layout.addRow(
+                QLabel(key), widget
+            )
+            widget.setText(text)
+            self.widgets[key] = widget
+
+        layout.addWidget(btnbox)
+        self.setLayout(layout)
+        btnbox.accepted.connect(self.accept)
+        btnbox.rejected.connect(self.reject)
+
+    def get(self):
+        save = False
+        if self.exec_():
+            save = True
+
+        return {
+            key: widget.text() for key, widget in self.widgets.items()
+        }, save

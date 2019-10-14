@@ -1,9 +1,10 @@
-from RegisterProfileEditor.config import register_columns, field_columns, new_reg, new_field, register_formatter, block_formatter
-from RegisterProfileEditor.config import loop_formatter, offset_length
+from RegisterProfileEditor.config import register_columns, field_columns, new_reg, new_field, register_formatter
+from RegisterProfileEditor.config import loop_formatter, offset_length, block_formatter, block_columns
 import pandas as pd
 from copy import deepcopy
 from collections import OrderedDict
-
+from PyQt5.QtGui import QStandardItem
+from PyQt5.QtCore import Qt
 
 class Register:
 
@@ -15,15 +16,10 @@ class Register:
             self.fields = [new_field.copy()]
         self.parent = parent
         self.init_fields()
-        self._register = {
-            "Offset": '0x0',
-            "Name": "NameNotFound",
-            "Description": '',
-            "Loop": '1',
-            "Incr": "0x0"
-        }
-        self._register.update(register)
+        self._register = {}
         self.inti_register()
+        self._register.update(register)
+
 
     def toDataFrame(self) -> (set, pd.DataFrame, bool):
         success = self.linting()
@@ -81,9 +77,7 @@ class Register:
 
     def inti_register(self):
         for col, config in register_columns.items():
-            text = self._register.get(col, None)
-            if text is None:
-                self._register[col] = config.get('default', '')
+            self._register[col] = config.get('default', '')
 
     @property
     def loop(self):
@@ -99,7 +93,7 @@ class Register:
 
     @property
     def name(self) -> str:
-        return self._register.get("Name", '')
+        return self._register.get("Name", 'NameNotFound')
 
     def get(self, key):
         return self._register.get(key, '')
@@ -133,23 +127,34 @@ class Block:
             self.registers = [deepcopy(new_reg)]
 
         self.init_registers()
-        self._block = {
-            "ModuleName": "ModuleNameNotFound",
-            "BaseAddress": "0x0"
-        }
+        self._block = {}
+        self.init_block()
         self._block.update(block)
-        # self.ptr = 0
+        self.displayItem = []
+        self.setDisplayItem()
 
     def init_registers(self):
         for index, register in enumerate(self.registers):
             self.registers[index] = Register(register, parent=self)
 
-    def get(self, key):
-        return self._block.get(key, '')
+    def get(self, key, default=''):
+        return self._block.get(key, default)
+
+    def init_block(self):
+        for key, config in block_columns.items():
+            self._block[key] = config.get('default', '')
+
+    def setDisplayItem(self):
+        for key, config in block_columns.items():
+            display = config.get('display', False)
+            if display:
+                item = QStandardItem(self.get(key))
+                item.setData('dialog', Qt.UserRole)
+                self.displayItem.append(item)
 
     @property
     def block_name(self) -> str:
-        return self._block.get('ModuleName', '')
+        return self._block.get('ModuleName', 'ModuleNameNotFound')
 
     @property
     def base_address(self) -> str:
@@ -185,12 +190,9 @@ class Block:
             registers.append(
                 register.toDict()
             )
-
-        return {
-            "ModuleName": self.block_name,
-            "BaseAddress": self.base_address,
-            "Registers": registers
-        }
+        data = self._block.copy()
+        data['Registers'] = registers
+        return data
 
     def get_register(self, index: int):
         try:
@@ -225,8 +227,18 @@ class Block:
             address = int(self.base_address, 16) + int(register.offset, 16)
             yield f"0x{address:08X} ({self.block_name}/{register.name})", register.fields
 
+    def update(self, a_dict):
+        self._block.update(a_dict)
 
+    def getDisplayItem(self):
+        return self.displayItem
 
-
+    def viewUpdate(self):
+        index = 0
+        for col, config in block_columns.items():
+            if config.get('display', False):
+                self.displayItem[index].setText(self.get(col))
+                # self.displayItem[1].setText(self.block_name)
+                index += 1
 
 

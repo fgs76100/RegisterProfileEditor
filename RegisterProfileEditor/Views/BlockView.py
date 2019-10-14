@@ -6,7 +6,7 @@ from PyQt5.QtWidgets import QWidget, QLineEdit, QUndoStack, QVBoxLayout, QMenu, 
 from PyQt5.QtGui import QContextMenuEvent, QStandardItemModel, QStandardItem
 import re
 from .widgets import TreeView, LineEditDelegate, MessageBox
-from .widgets import ListViewDelegate, TextEditDelegate
+from .widgets import ListViewDelegate, TextEditDelegate, InputDialog
 from .CommandStack import TreeInsertCommand, TreeRemoveCommand
 from .CommandStack import DataChanged
 from RegisterProfileEditor.config import register_contextmenu, new_reg, GUI_NAME, caption_formatter, block_columns
@@ -37,6 +37,7 @@ class BlockView(QWidget):
         vbox.addWidget(self.tree)
         self.setLayout(vbox)
         self.tree.selectionModel().selectionChanged.connect(self.selectionChangedEvent)
+        self.tree.doubleClicked.connect(self.moduleModify)
         self.entry.textChanged.connect(self.searchTree)
         self.hiddenRows = {}
 
@@ -129,9 +130,9 @@ class BlockView(QWidget):
             )
 
         for block in self.blocks:
-            name = block.block_name
-            addr = block.base_address
-            root = [QStandardItem(addr), QStandardItem(name)]
+            block.viewUpdate()
+            root = block.getDisplayItem()
+
             for register in block:
                 root[0].appendRow(
                     [
@@ -364,6 +365,23 @@ class BlockView(QWidget):
         except Exception as e:
             print(traceback.format_exc())
 
+    def moduleModify(self, index: QModelIndex):
+        if not index.isValid():
+            return
+        item = self.model.itemFromIndex(index)
+        if item.data(Qt.UserRole) == 'dialog':
+            block = self.blocks[index.row()]
+            dialog = InputDialog(
+                parent=self,
+                title=GUI_NAME,
+                inputs=block_columns,
+                values=block
+            )
+            info, save = dialog.get()
+            if save:
+                block.update(info)
+                block.viewUpdate()
+
     def cut(self):
         self.copy()
         self.remove()
@@ -396,11 +414,6 @@ class BlockView(QWidget):
         self.tree.setFocus()
 
     def saveChanges(self):
-        for row in range(self.model.rowCount()):
-            for col, header in enumerate(block_columns.keys()):
-                item = self.model.item(row, col)
-                self.blocks[row][header] = item.text()
-
         for row in range(self.model.rowCount()):
             item = self.model.item(row, 0)
             block = self.blocks[row]

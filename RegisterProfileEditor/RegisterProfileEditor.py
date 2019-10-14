@@ -8,8 +8,8 @@ from PyQt5.QtGui import QFont
 
 from .Views.BaseClass import Block
 
-from .Views.widgets import FileDialog, MessageBox, InfoDialog, ModuleDialog, TabLayout, BackUpFile
-from .config import register_columns, field_columns, menubar_configs, GUI_NAME
+from .Views.widgets import FileDialog, MessageBox, InfoDialog, ModuleDialog, TabLayout, BackUpFile, InputDialog
+from .config import register_columns, field_columns, menubar_configs, GUI_NAME, block_columns
 from .IOHandle.ExcelParser import ExcelParser, JsonLoad
 from .IOHandle.RegisterProfileWriter import JsonWriter, ExcelWriter
 from .IOHandle.HTMLWriter import HTMLWriter
@@ -260,11 +260,13 @@ class App(QMainWindow):
                 self.remove_backup()
             self.is_write = False
             # self.info.upload_text(
-            #     '# [INFO] Finished.'
+            #     '# [INFO] Program Ends.'
             # )
 
     def newModule(self):
-        new = ModuleDialog(title="New Module", parent=self)
+        new = InputDialog(
+            title="New Module", parent=self, inputs=block_columns
+        )
         info, yes = new.get()
         if yes:
             self.data['blocks'].append(
@@ -304,7 +306,10 @@ class App(QMainWindow):
             event.ignore()
 
     def saveAsOne(self):
-        filename, ftype = self.filedialog.asksavefile()
+        filename, ftype = self.filedialog.asksavefile(
+            ftypes="Excel Files (*.xls);;JSON Files (*.json);;All Files (*);;",
+            initial_ftype="Excel Files (*.xls)"
+        )
         self.save(filename=filename, ftype=ftype)
 
     def saveExcelSeparately(self):
@@ -360,6 +365,9 @@ class App(QMainWindow):
 
         self.address_space.clear()
         for block in self.data['blocks']:
+            # self.info.upload_text(
+            #     f"# [INFO] loading {block} ..."
+            # )
             for address_space, fields in block.address_space():
                 if address_space in self.address_space:
                     self.info.upload_text(
@@ -387,7 +395,26 @@ class App(QMainWindow):
         self.threadpool.start(thread)
 
     def saveAsHTML(self):
-        filename, _ = self.filedialog.asksavefile()
+        filename, _ = self.filedialog.asksavefile(
+            initial_ftype="HTML (*.html)"
+        )
+        if not filename:
+            return
+        if not filename.endswith('.html'):
+            filename = filename.split('.')[0]+'.html'
+        dialog = InputDialog(
+            title=GUI_NAME,
+            parent=self,
+            inputs={
+                "Project": {},
+                "Module": {}
+            }
+        )
+        project, save = dialog.get()
+        if not save:
+            return
+        self.is_write = True
+        self.info.show()
         self.tree.saveChanges()
         path = os.path.abspath(os.path.abspath(os.path.dirname(__file__)))
         template = os.path.join(path, 'templates/template.html')
@@ -396,10 +423,14 @@ class App(QMainWindow):
             filename=filename,
             blocks=self.data['blocks'],
             template=template,
+            project=project
         )
+        writer.signal.progress.connect(
+            self.info.upload_text
+        )
+        self.info.thread_cnt += 1
         self.threadpool.start(writer)
-
-
+        self.thread_done()
 
 
 def trap_exc_during_debug(*args):

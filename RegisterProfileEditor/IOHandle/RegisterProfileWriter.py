@@ -5,7 +5,7 @@ from PyQt5.QtCore import QRunnable
 from .ExcelParser import ProgressSignal
 from xlwt import Workbook, easyxf
 from collections import OrderedDict
-
+from RegisterProfileEditor.Views.BaseClass import Block
 
 class JsonWriter(QRunnable):
     def __init__(self, blocks: list, filename: str, separately: bool=False):
@@ -68,11 +68,12 @@ class JsonWriter(QRunnable):
 
 
 class ProfileWriter:
-    def __init__(self, ip='', base_addr=None):
+    def __init__(self, block: Block=None, ip='', base_addr=None):
         self.base_addr = base_addr
         self.workbook = Workbook()
         self.mode = 'mod_' + ip
         self.file = 'file_' + ip
+        self.block = block
         self.ip = ip.upper()
         if ip != '':
             self.mod_sheet = self.workbook.add_sheet(sheetname=self.mode, cell_overwrite_ok=True)
@@ -92,18 +93,21 @@ class ProfileWriter:
     def set_base_address(self, base_addr):
         self.base_addr = base_addr
 
+    def set_block(self, block: Block):
+        self.block = block
+
     def create_mode_sheet(self):
         mode_des = OrderedDict(
             DATA_MUX='Please provide the following information that will be shown in DATA_MUX Level',
             NAME=self.ip,
-            DESCRIPTION='This chapter describes ' + self.ip,
+            DESCRIPTION=self.block.get('Description'),
             COMMENT='Comment of RTL code',
             REGNUM='',
-            AUTHOR='',
+            AUTHOR=self.block.get('Author'),
             DATE='',
-            VERSION='',
-            ABSTRACT='{}'.format(self.base_addr),
-            HISTORY='',
+            VERSION=self.block.get('Version'),
+            ABSTRACT=self.base_addr,
+            HISTORY=self.block.get('Revision'),
             REG_FILE=['File list of registers in DATA_MUX (*.xml)', self.file + '.xml'],
         )
         self.create_description(desr=mode_des, sheet=self.mod_sheet)
@@ -113,14 +117,14 @@ class ProfileWriter:
             FILE='Please provide the following information that will be shown in FILE Level',
             PUBLIC='Y',
             NAME=self.ip,
-            DESCRIPTION=self.ip + ' Register Sets',
+            DESCRIPTION=self.block.get('Description'),
             COMMENT='Comment of RTL code',
             REGNUM='',
-            AUTHOR='',
+            AUTHOR=self.block.get('Author'),
             DATE='',
-            VERSION='{}'.format(self.base_addr),
-            ABSTRACT='',
-            HISTORY='',
+            VERSION=self.block.get('Version'),
+            ABSTRACT=self.base_addr,
+            HISTORY=self.block.get('Revision'),
         )
 
         row = ['REGISTER', 'Content of registers', '', '', '', '', '', '', '', '', 'FIELD', 'Content of register fields']
@@ -268,6 +272,11 @@ class ExcelWriter(QRunnable):
                 for block in self.blocks:
                     block_name = block.block_name
                     base_address = block.base_address
+                    writer = ProfileWriter(
+                        block=block,
+                        ip=block_name,
+                        base_addr=base_address
+                    )
                     block, success, msg = block.toDataFrame()
                     if not success:
                         self.signal.progress.emit(
@@ -288,10 +297,7 @@ class ExcelWriter(QRunnable):
                         )
                         return
 
-                    writer = ProfileWriter(
-                        ip=block_name,
-                        base_addr=base_address
-                    )
+
                     writer.create_mode_sheet()
                     writer.create_file_sheet(df=block)
                     filename = os.path.join(self.filename, block_name+'.xls')
@@ -301,10 +307,12 @@ class ExcelWriter(QRunnable):
                     )
             else:
                 writer = ProfileWriter(
+                    block=None,
                     ip='',
                     base_addr=None
                 )
                 for block in self.blocks:
+                    writer.set_block(block)
                     block_name = block.block_name
                     base_address = block.base_address
                     block, success, msg = block.toDataFrame()

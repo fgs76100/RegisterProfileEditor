@@ -41,9 +41,11 @@ register_columns = OrderedDict([
     ('Offset',  dict(
         width=150,
         type='hex',
+        default='0x0'
     )),
     ('Name', dict(
-        width=200
+        width=200,
+        default='NameNotFound'
     )),
     ('Description', dict(
         width=150,
@@ -66,12 +68,25 @@ register_columns = OrderedDict([
 
 block_columns = OrderedDict([
     ('BaseAddress',  dict(
-        width=150,
+        default='0x0',
         type='hex',
+        display=True
     )),
     ('ModuleName', dict(
-        width=200
+        default='New',
+        display=True,
     )),
+    ('Description', dict(
+        display=True,
+    )),
+    ('Author', dict(
+    )),
+    ('Version', dict(
+    )),
+    ('Revision', dict(
+        widget='textEdit'
+    )),
+
 ])
 
 register_contextmenu = [
@@ -231,6 +246,7 @@ field_columns = OrderedDict([
         default='Y',
         items=['Y', 'N'],
         # belongto='Description'
+        drop=True
     )),
     ("Description", dict(
         width=200,
