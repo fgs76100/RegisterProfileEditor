@@ -62,6 +62,7 @@ class ExcelParser(QRunnable):
                     "BaseAddress": baseaddr,
                     "Registers": []
                 }
+                module.update(reader.get_info(block))
                 for register, fields in registers:
                     addr, name, description = register
                     addr = int(addr, 16) - int(baseaddr, 16)

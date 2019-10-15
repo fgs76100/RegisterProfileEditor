@@ -643,6 +643,8 @@ class TreeView(QTreeView):
 
     def mouseDoubleClickEvent(self, event: QMouseEvent):
         index = self.currentIndex()
+        if not index.isValid():
+            return
         item = self.model().itemFromIndex(index)
         if item.data(Qt.UserRole) == 'dialog':
             self.doubleClicked.emit(index)
@@ -918,6 +920,7 @@ class InputDialog(QDialog):
         btnbox = QDialogButtonBox(btn, self)
         layout = QFormLayout()
         self.widgets = OrderedDict()
+        self.resize(600, 400)
         if values is None:
             values = {}
         for key, config in inputs.items():

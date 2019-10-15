@@ -104,6 +104,8 @@ class BlockView(QWidget):
         return False
 
     def dataBeforeChangedEvent(self, index: QModelIndex, new: str, old: str):
+        if not index.isValid():
+            return
         row = index.row()
         col = index.column()
         cmd = DataChanged(
@@ -130,7 +132,7 @@ class BlockView(QWidget):
             )
 
         for block in self.blocks:
-            block.viewUpdate()
+            block.setDisplayItem()
             root = block.getDisplayItem()
 
             for register in block:
@@ -266,6 +268,8 @@ class BlockView(QWidget):
         row = self.tree.currentRow
         new = Register(deepcopy(new_reg))
         index = self.tree.currentIndex()
+        if not index.isValid():
+            return
         if index.column() != 0:
             index = index.sibling(index.row(), 0)
         try:
@@ -284,6 +288,8 @@ class BlockView(QWidget):
 
     def prepend_new(self):
         index = self.tree.currentIndex()
+        if not index.isValid():
+            return
         if index.column() != 0:
             index = index.sibling(index.row(), 0)
         row = self.tree.currentRow

@@ -145,6 +145,7 @@ class Block:
             self._block[key] = config.get('default', '')
 
     def setDisplayItem(self):
+        self.displayItem = []
         for key, config in block_columns.items():
             display = config.get('display', False)
             if display:

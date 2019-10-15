@@ -60,6 +60,8 @@ class FieldView(QWidget):
         self.create_rows()
 
     def dataBeforeChangedEvent(self, index: QModelIndex, new: str, old: str):
+        if not index.isValid():
+            return
         row = index.row()
         col = index.column()
         cmd = DataChanged(
@@ -72,6 +74,8 @@ class FieldView(QWidget):
         self.undoStack.push(cmd)
 
     def chgRowHeight(self, index: QModelIndex, size: QSizeF):
+        if not index.isValid():
+            return
         row = index.row()
         self.table.setRowHeight(row, size.height())
 
