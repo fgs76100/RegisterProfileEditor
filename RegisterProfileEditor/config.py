@@ -83,7 +83,7 @@ block_columns = OrderedDict([
     )),
     ('Version', dict(
     )),
-    ('Revision', dict(
+    ('Revisions', dict(
         widget='textEdit'
     )),
 

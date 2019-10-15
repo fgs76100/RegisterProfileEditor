@@ -181,7 +181,7 @@ class RegisterProfileReader(QObject):
     def get_info(self, module):
         info = self.module_info.get(module, {})
         if info:
-            info['Revision'] = info.pop('History')
+            info['Revisions'] = info.pop('History')
         return info
 
 
