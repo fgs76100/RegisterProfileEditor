@@ -20,6 +20,7 @@ from .Views.FieldView import FieldView
 from .Views.BlockView import BlockView
 from datetime import date
 
+
 class App(QMainWindow):
 
     reload_address = pyqtSignal(dict)
@@ -87,6 +88,9 @@ class App(QMainWindow):
                 self.loadFiles([filename])
 
         self.table.tableSaved.connect(self.backUpFile)
+        self.tree.addAnalyzerTrigger.connect(
+            self.analyzer.add_analyzer
+        )
 
     def create_ui(self):
         self.resize(1200, 600)
@@ -474,8 +478,8 @@ def main():
     # timer.timeout.connect(lambda: None)
     # timer.start(100)
     app.setFont(font)
-    # window = App(sys.argv[1])
-    window = App()
+    window = App(sys.argv[1])
+    # window = App()
     sys.exit(app.exec())
 
 

@@ -91,6 +91,12 @@ block_columns = OrderedDict([
 
 register_contextmenu = [
     dict(
+        label='Add Analyzer',
+        shortcut='A',
+        action='addAnalyzer',
+        icon='fa.clipboard',
+    ),
+    dict(
         label='Append copy',
         shortcut='Ctrl+V',
         action='append_copy',
@@ -249,7 +255,7 @@ field_columns = OrderedDict([
         drop=True
     )),
     ("Description", dict(
-        width=200,
+        width=400,
         widget='textEdit',
         resize=True,
         require=False,

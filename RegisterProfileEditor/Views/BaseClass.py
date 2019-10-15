@@ -9,13 +9,12 @@ from PyQt5.QtCore import Qt
 
 class Register:
 
-    def __init__(self, register: dict, parent=None):
+    def __init__(self, register: dict):
         super(Register, self).__init__()
         if "Fields" in register.keys():
             self.fields = register.pop('Fields')
         else:
             self.fields = [new_field.copy()]
-        self.parent = parent
         self.init_fields()
         self._register = {}
         self.inti_register()
@@ -120,7 +119,7 @@ class Register:
     def copy(self):
         new = deepcopy(self._register)
         new["Fields"] = deepcopy(self.fields)
-        return Register(new, parent=self.parent)
+        return Register(new)
 
 
 class Block:
@@ -136,11 +135,11 @@ class Block:
         self.init_block()
         self._block.update(block)
         self.displayItem = []
-        self.setDisplayItem()
+        # self.setDisplayItem()
 
     def init_registers(self):
         for index, register in enumerate(self.registers):
-            self.registers[index] = Register(register, parent=self)
+            self.registers[index] = Register(register)
 
     def get(self, key, default=''):
         return self._block.get(key, default)
@@ -155,7 +154,7 @@ class Block:
             display = config.get('display', False)
             if display:
                 item = QStandardItem(self.get(key))
-                item.setData('dialog', Qt.UserRole)
+                item.setData('block', Qt.UserRole)
                 self.displayItem.append(item)
 
     @property
@@ -233,6 +232,11 @@ class Block:
             address = int(self.base_address, 16) + int(register.offset, 16)
             yield f"0x{address:08X} ({self.block_name}/{register.name})", register.fields
 
+    def get_address_space(self, index):
+        register = self.get_register(index)
+        address = int(self.base_address, 16) + int(register.offset, 16)
+        return f"0x{address:08X} ({self.block_name}/{register.name})", register.fields
+
     def update(self, a_dict):
         self._block.update(a_dict)
 
@@ -246,4 +250,13 @@ class Block:
                 self.displayItem[index].setText(self.get(col))
                 # self.displayItem[1].setText(self.block_name)
                 index += 1
+
+    def copy(self):
+        new = Block({})
+        new.update(self._block)
+        new.registers = deepcopy(self.registers)
+        new.setDisplayItem()
+        return new
+
+
 

@@ -98,8 +98,8 @@ class TreeRemoveCommand(QUndoCommand):
 class TreeInsertCommand(QUndoCommand):
 
     def __init__(self, widget: QStandardItem,
-                 block: list, row: int, items: dict, description: str,
-                 cols: dict
+                 block: list, row: int, items, description: str,
+                 cols: dict, is_root=False
                  ):
         super(TreeInsertCommand, self).__init__(description)
         self.widget = widget
@@ -107,17 +107,31 @@ class TreeInsertCommand(QUndoCommand):
         self.items = items
         self.block = block
         self.cols = cols
+        self.is_root = is_root
 
     def redo(self):
+        if not self.is_root:
+            self.widget.insertRow(
+                self.row,
+                [
+                    QStandardItem(
+                        self.items.get(col)
+                    ) for col in self.cols.keys()
+                ]
+            )
+        else:
+            self.items.setDisplayItem()
+            root = self.items.getDisplayItem()
+            for register in self.items:
+                root[0].appendRow(
+                    [
+                        QStandardItem(
+                            register.get(col)
+                        ) for col in self.cols.keys()
+                    ]
+                )
+            self.widget.insertRow(self.row, root)
 
-        self.widget.insertRow(
-            self.row,
-            [
-                QStandardItem(
-                    self.items.get(col)
-                ) for col in self.cols.keys()
-            ]
-        )
         self.block.insert(
             self.row,
             self.items

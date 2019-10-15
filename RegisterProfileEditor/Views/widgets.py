@@ -656,7 +656,7 @@ class TreeView(QTreeView):
         if not index.isValid():
             return
         item = self.model().itemFromIndex(index)
-        if item.data(Qt.UserRole) == 'dialog':
+        if item.data(Qt.UserRole) == 'block':
             self.doubleClicked.emit(index)
             return
         super(TreeView, self).mouseDoubleClickEvent(event)

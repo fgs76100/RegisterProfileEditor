@@ -2,7 +2,7 @@ from PyQt5.QtWidgets import QWidget, QLineEdit, QCompleter, QPushButton, QHBoxLa
 from PyQt5.QtWidgets import QScrollArea
 from PyQt5.QtCore import Qt, QStringListModel, QModelIndex, pyqtSignal
 from PyQt5.QtGui import QStandardItem, QStandardItemModel, QFont, QColor
-from .widgets import LineEditDelegate, TableView
+from .widgets import LineEditDelegate, TableView, TextEditDelegate
 
 
 class AnalyzerView(QWidget):
@@ -71,6 +71,9 @@ class AnalyzerView(QWidget):
         self.create_cols()
         self.detail()
 
+    def set_address_space(self, address):
+        self.entry.setText(address)
+
     def dataChangeEvent(self, index_0: QModelIndex, new: str, old: str):
         if not index_0.isValid():
             return
@@ -78,7 +81,11 @@ class AnalyzerView(QWidget):
         chg_col = index_0.column()
         if chg_col < len(self.cols.keys()):
             return
-
+        if chg_row == 0:
+            item = self.model.itemFromIndex(index_0)
+            item.setText(new)
+            return
+        last_row = self.model.rowCount()-1
         if chg_row != 0:
             item = self.model.item(0, chg_col)
             total = item.text().strip()
@@ -115,6 +122,7 @@ class AnalyzerView(QWidget):
         rows = [
             QStandardItem(col) for col in self.cols.keys()
         ]
+
         self.model.appendRow(rows)
 
     def create_rows(self):
@@ -124,6 +132,7 @@ class AnalyzerView(QWidget):
         if fields:
             self.model.clear()
             self.create_cols()
+            # last_row = []
             for row, field in enumerate(fields):
                 is_reserved = (field.get('Field', '') == 'RESERVED')
                 rows = []
@@ -131,9 +140,6 @@ class AnalyzerView(QWidget):
                     self.reserved_row.append(row+1)
                 for col in self.cols.keys():
                     cell = QStandardItem(str(field[col]))
-                    # cell.setFlags(
-                    #     Qt.ItemIsSelectable
-                    # )
                     cell.setEditable(False)
                     rows.append(cell)
                 self.model.appendRow(rows)
@@ -146,7 +152,6 @@ class AnalyzerView(QWidget):
                 (self.model.rowCount()+1)*self.table.rowHeight(0)
             )
             self.add_col.setDisabled(False)
-
 
     def hide_reserved(self):
         # self.table.blockSignals(True)
@@ -189,18 +194,21 @@ class AnalyzerView(QWidget):
         self.hide_reserved()
 
     def detail(self):
-        for col, header in enumerate(self.cols.keys()):
+        for col, (header, config) in enumerate(self.cols.items()):
             to_hide = ['Description', 'Testable', 'Public']
+            width = config.get('width', None)
             if header in to_hide:
                 if self.show_detail.checkState() != Qt.Checked:
                     self.table.hideColumn(col)
                 else:
                     self.table.showColumn(col)
-
-        for col, config in enumerate(self.cols.values()):
-            width = config.get('width', None)
             if width:
                 self.table.setColumnWidth(col, width)
+            # self.table.resizeColumnToContents(col)
+
+        for row in range(self.model.rowCount()):
+            self.table.resizeRowToContents(row)
+        # self.table.setMinimumHeight(self.table.size().height())
 
     def reload_address(self, address_space: dict):
         self.address_space = address_space
@@ -260,7 +268,7 @@ class AnalyzerWapper(QWidget):
         self.vbox.addWidget(self.add_analyzer_btn)
         self.reload = reload
 
-        for _ in range(2):
+        for _ in range(1):
             ana = AnalyzerView(parent=self, cols=self.cols, address_space=self.address_space)
             self.reload.connect(
                 ana.reload_address
@@ -273,7 +281,7 @@ class AnalyzerWapper(QWidget):
         self.add_analyzer_btn.clicked.connect(self.add_analyzer)
         self.reload.connect(self.reload_address)
 
-    def add_analyzer(self):
+    def add_analyzer(self, address=None):
         ana = AnalyzerView(parent=self, cols=self.cols, address_space=self.address_space)
         self.vbox.addWidget(
             ana
@@ -281,6 +289,8 @@ class AnalyzerWapper(QWidget):
         self.reload.connect(
             ana.reload_address
         )
+        if isinstance(address, str):
+            ana.set_address_space(address)
 
     def reload_address(self, address_space: dict):
         self.address_space = address_space

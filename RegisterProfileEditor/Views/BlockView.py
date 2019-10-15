@@ -18,6 +18,7 @@ import qtawesome as qta
 class BlockView(QWidget):
 
     selectionChanged = pyqtSignal(int, int, str)
+    addAnalyzerTrigger = pyqtSignal(str)
 
     def __init__(self, parent, cols: dict, blocks: [Block], undoStack: QUndoStack):
         super(BlockView, self).__init__(parent=parent)
@@ -130,11 +131,9 @@ class BlockView(QWidget):
                 0,
                 self.model.rowCount()
             )
-
         for block in self.blocks:
             block.setDisplayItem()
             root = block.getDisplayItem()
-
             for register in block:
                 root[0].appendRow(
                     [
@@ -158,9 +157,6 @@ class BlockView(QWidget):
             if widget == "list":
                 items = config.get('items', [])
                 delegate = ListViewDelegate(self.tree, items)
-                delegate.sizeChanged.connect(
-                    self.chgRowHeight
-                )
             elif widget == 'textEdit':
                 delegate = TextEditDelegate(self.tree)
             else:
@@ -214,16 +210,13 @@ class BlockView(QWidget):
             values[col] = item.data()
         return values
 
-    def iterItemPerSelectedRow(self, buffer=False) -> (int, QModelIndex):
-        if not buffer:
-            indexes = self.tree.selectedIndexes()
-        else:
-            indexes = self.buffer
-
+    def iterItemPerSelectedRow(self) -> (int, QModelIndex):
+        indexes = self.tree.selectedIndexes()
         col_length = len(self.cols.keys())
+
         for i in range(0, len(indexes), col_length):
-            index = indexes[i].parent()
-            yield indexes[i].row(), self.model.itemFromIndex(index)
+            index = indexes[i]
+            yield index.row(), index
             # yield indexes[i].row()
 
     def contextMenuEvent(self, event: QContextMenuEvent):
@@ -270,6 +263,8 @@ class BlockView(QWidget):
         index = self.tree.currentIndex()
         if not index.isValid():
             return
+        if index.data(Qt.UserRole) == 'block':
+            return
         if index.column() != 0:
             index = index.sibling(index.row(), 0)
         try:
@@ -289,6 +284,8 @@ class BlockView(QWidget):
     def prepend_new(self):
         index = self.tree.currentIndex()
         if not index.isValid():
+            return
+        if index.data(Qt.UserRole) == 'block':
             return
         if index.column() != 0:
             index = index.sibling(index.row(), 0)
@@ -313,16 +310,22 @@ class BlockView(QWidget):
     def append_copy(self):
         if self.buffer is None:
             return
-        row = self.tree.currentRow
+        index = self.tree.currentIndex()
+        if index.data(Qt.UserRole) == 'block':
+            items = self.buffer.get('blocks')
+        else:
+            items = self.buffer.get('registers')
+        if not items:
+            return
         news = []
-        for register in self.buffer:
-            news.append(register.copy())
+        for item in items:
+            news.append(item.copy())
+        row = self.tree.currentRow
 
         self.insert_row(
             row+1,
             news,
         )
-        # self.buffer = None
 
     def prepend_copy(self):
         if self.buffer is None:
@@ -336,14 +339,15 @@ class BlockView(QWidget):
             news,
         )
 
-    def getCurrentRoot(self):
-        return self.model.itemFromIndex(self.tree.currentIndex()).parent()
-
     def insert_row(self, row, items):
-        root = self.getCurrentRoot()
+        root = self.model.itemFromIndex(self.tree.currentIndex()).parent()
         if root is None:
-            return
-        block = self.blocks[root.row()].registers
+            root = self.model
+            block = self.blocks
+            is_root = True
+        else:
+            block = self.blocks[root.row()].registers
+            is_root = False
         for item in reversed(items):
             cmd = TreeInsertCommand(
                 widget=root,
@@ -351,29 +355,27 @@ class BlockView(QWidget):
                 row=row,
                 items=item,
                 cols=self.cols,
-                description='tree insertion'
+                description='tree insertion',
+                is_root=is_root
             )
             self.undoStack.push(cmd)
 
     def copy(self):
         try:
-            values = []
-            for row, item in self.iterItemPerSelectedRow():
-                if item is None:
-                    MessageBox.showWarning(
-                        self,
-                        "Copy module is not supported",
-                        GUI_NAME,
-                    )
-                    break
-                register = self.blocks[item.row()].get_register(row)
-                values.append(register.copy())
-
+            values = {
+                'blocks': [],
+                'registers': []
+            }
+            for row, index in self.iterItemPerSelectedRow():
+                if index.data(Qt.UserRole) == 'block':
+                    values['blocks'].append(self.blocks[row].copy())
+                else:
+                    register = self.blocks[index.parent().row()].get_register(row)
+                    values['registers'].append(register.copy())
             if not values:
                 self.buffer = None
             else:
                 self.buffer = values
-
         except Exception as e:
             print(traceback.format_exc())
 
@@ -381,7 +383,7 @@ class BlockView(QWidget):
         if not index.isValid():
             return
         item = self.model.itemFromIndex(index)
-        if item.data(Qt.UserRole) == 'dialog':
+        if item.data(Qt.UserRole) == 'block':
             block = self.blocks[index.row()]
             dialog = InputDialog(
                 parent=self,
@@ -402,15 +404,17 @@ class BlockView(QWidget):
         if not self.blocks:
             return
         items = {}
-        root = self.getCurrentRoot()
-        block = self.blocks
-        for row, item in self.iterItemPerSelectedRow():
-            if item is None:
+        for row, index in self.iterItemPerSelectedRow():
+            item = self.model.itemFromIndex(index)
+            if not index.isValid():
+                continue
+            if item.data(Qt.UserRole) == 'block':
                 if row >= len(self.blocks):
                     continue
-                items[row] = [self.model, block]
+                items[row] = [self.model, self.blocks]
             else:
-                items[row] = [item, block[root.row()].registers]
+                index = index.parent()
+                items[row] = [self.model.itemFromIndex(index), self.blocks[index.row()].registers]
         if not items:
             return
         for row in sorted(items.keys(), reverse=True):
@@ -438,6 +442,17 @@ class BlockView(QWidget):
 
     def clearSelection(self):
         self.tree.clearSelection()
+
+    def addAnalyzer(self):
+        index = self.tree.currentIndex()
+        if not index.isValid():
+            return
+        if index.data(Qt.UserRole) == 'block':
+            return
+
+        block_index = index.parent().row()
+        address, _ = self.blocks[block_index].get_address_space(index.row())
+        self.addAnalyzerTrigger.emit(address)
 
 
 
