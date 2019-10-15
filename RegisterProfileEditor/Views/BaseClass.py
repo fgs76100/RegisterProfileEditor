@@ -6,6 +6,7 @@ from collections import OrderedDict
 from PyQt5.QtGui import QStandardItem
 from PyQt5.QtCore import Qt
 
+
 class Register:
 
     def __init__(self, register: dict, parent=None):
@@ -19,7 +20,6 @@ class Register:
         self._register = {}
         self.inti_register()
         self._register.update(register)
-
 
     def toDataFrame(self) -> (set, pd.DataFrame, bool):
         success = self.linting()
@@ -116,6 +116,11 @@ class Register:
 
     def __setitem__(self, key, data):
         self._register[key] = data
+
+    def copy(self):
+        new = deepcopy(self._register)
+        new["Fields"] = deepcopy(self.fields)
+        return Register(new, parent=self.parent)
 
 
 class Block:
@@ -241,5 +246,4 @@ class Block:
                 self.displayItem[index].setText(self.get(col))
                 # self.displayItem[1].setText(self.block_name)
                 index += 1
-
 

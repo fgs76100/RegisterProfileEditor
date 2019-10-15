@@ -93,7 +93,8 @@ class FieldView(QWidget):
         self.model.removeRows(0, self.model.rowCount())
 
         for row, item in enumerate(self.items):
-            is_reserved = (item.get('Field', '') == 'RESERVED') & (self.is_reserve_show.checkState() == Qt.Unchecked)
+            is_reserved = (item.get('Field', '').lower() == 'reserved') & \
+                          (self.is_reserve_show.checkState() == Qt.Unchecked)
             rows = []
             for col in self.cols.keys():
                 cell = QStandardItem(str(item[col]))

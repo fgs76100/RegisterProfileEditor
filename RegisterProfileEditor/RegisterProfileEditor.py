@@ -1,14 +1,14 @@
 import sys
 import traceback
 import os
-from PyQt5.QtCore import QThreadPool, Qt, QTimer, pyqtSignal
+from PyQt5.QtCore import QThreadPool, Qt, pyqtSignal
 from PyQt5.QtWidgets import QMainWindow, QUndoStack, QHBoxLayout, QSplitter, QWidget, QDesktopWidget, QMenuBar
 from PyQt5.QtWidgets import QAction, QApplication, QTreeView, QFontDialog, QMenu
 from PyQt5.QtGui import QFont
 
 from .Views.BaseClass import Block
 
-from .Views.widgets import FileDialog, MessageBox, InfoDialog, ModuleDialog, TabLayout, BackUpFile, InputDialog
+from .Views.widgets import FileDialog, MessageBox, InfoDialog, TabLayout, BackUpFile, InputDialog
 from .config import register_columns, field_columns, menubar_configs, GUI_NAME, block_columns
 from .IOHandle.ExcelParser import ExcelParser, JsonLoad
 from .IOHandle.RegisterProfileWriter import JsonWriter, ExcelWriter
@@ -18,7 +18,7 @@ import qtawesome as qta
 from .Views.AnalyzerView import AnalyzerWapper
 from .Views.FieldView import FieldView
 from .Views.BlockView import BlockView
-
+from datetime import date
 
 class App(QMainWindow):
 
@@ -29,7 +29,7 @@ class App(QMainWindow):
         self.is_write = False
         self.backup_file = os.path.join(os.getcwd(), '.tmp.json')
         self.setWindowTitle(GUI_NAME)
-        self.filedialog = FileDialog(self, filename)
+        self.filedialog = FileDialog(self)
         # self.table = Table(self)
         self.address_space = {}
         self.info = InfoDialog(title=GUI_NAME, parent=self)
@@ -342,10 +342,28 @@ class App(QMainWindow):
             elif 'xls' in ftype:
                 if not filename.endswith('.xls') and not separately:
                     filename += '.xls'
+                if not separately:
+                    dialog = InputDialog(
+                        title=GUI_NAME,
+                        parent=self,
+                        inputs={
+                            "HEADPAGE": {},
+                            "PREFIX": {},
+                            "DATE": {'default': date.today().strftime("%Y/%m/%d")},
+                            "AUTHOR": {},
+                            "DESCRIPTION": {}
+                        }
+                    )
+                    index_info, yes = dialog.get()
+                    if not yes:
+                        return
+                else:
+                    index_info = {}
                 writer = ExcelWriter(
                     filename=filename,
                     blocks=self.data['blocks'],
-                    separately=separately
+                    separately=separately,
+                    index_info=index_info
                 )
             else:
                 self.info.upload_text(
@@ -416,7 +434,7 @@ class App(QMainWindow):
         self.is_write = True
         self.info.show()
         self.tree.saveChanges()
-        path = os.path.abspath(os.path.abspath(os.path.dirname(__file__)))
+        path = os.path.abspath(os.path.dirname(__file__))
         template = os.path.join(path, 'templates/template.html')
 
         writer = HTMLWriter(
@@ -428,9 +446,12 @@ class App(QMainWindow):
         writer.signal.progress.connect(
             self.info.upload_text
         )
+        writer.signal.done.connect(
+            self.thread_done
+        )
         self.info.thread_cnt += 1
         self.threadpool.start(writer)
-        self.thread_done()
+
 
 
 def trap_exc_during_debug(*args):
@@ -449,12 +470,12 @@ def main():
     app = QApplication(sys.argv)
 
     font = QFont("Verdana", 12)
-    timer = QTimer()
-    timer.timeout.connect(lambda: None)
-    timer.start(100)
+    # timer = QTimer()
+    # timer.timeout.connect(lambda: None)
+    # timer.start(100)
     app.setFont(font)
-    window = App(sys.argv[1])
-    # window = App()
+    # window = App(sys.argv[1])
+    window = App()
     sys.exit(app.exec())
 
 

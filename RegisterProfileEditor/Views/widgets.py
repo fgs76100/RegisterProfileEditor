@@ -12,6 +12,7 @@ from functools import partial
 from .CommandStack import ReplaceCommand
 import json
 from collections import OrderedDict
+import os
 
 
 class HighlightDelegate(QStyledItemDelegate):
@@ -200,36 +201,42 @@ class FileDialog:
         self.path = path
         self.options = QFileDialog.Options()
         self.options |= QFileDialog.DontUseNativeDialog
+        if path is None:
+            self.path = os.getcwd()
 
-    def askopenfile(self):
-        filename, _ = QFileDialog.getOpenFileName(
-            self.parent,
-            "QFileDialog.getOpenFileName()",
-            "",
-            "Python Files (*.py);;All Files (*);;",
-            options=self.options
-        )
-
-        return filename
+    # def askopenfile(self):
+    #     filename, _ = QFileDialog.getOpenFileName(
+    #         self.parent,
+    #         "QFileDialog.getOpenFileName()",
+    #         "",
+    #         "Python Files (*.py);;All Files (*);;",
+    #         options=self.options
+    #     )
+    #
+    #     return filename
 
     def askopenfiles(self):
         filenames, _ = QFileDialog.getOpenFileNames(
             self.parent,
             "Chose files",
-            "",
+            self.path,
             "Excel Files (*.xls);;JSON Files (*.json);;All Files (*);;",
             "Excel Files (*.xls)",
             options=self.options
         )
+        if filenames:
+            self.path = filenames[0]
         return filenames
 
     def askopendir(self):
         directory = QFileDialog.getExistingDirectory(
             self.parent,
             "Chose a directory",
-            "",
+            self.path,
             options=self.options
         )
+        if directory:
+            self.path = directory
         return directory
 
     def asksavefile(self, ftypes=None, initial_ftype=None) -> (str, str):
@@ -238,12 +245,15 @@ class FileDialog:
         filename, ftype = QFileDialog.getSaveFileName(
             self.parent,
             "Save as",
-            "",
+            self.path,
             ftypes,
             initial_ftype,
             options=self.options
         )
+        if filename:
+            self.path = filename
         return filename, ftype
+
 
 
 class HexValidator(QValidator):

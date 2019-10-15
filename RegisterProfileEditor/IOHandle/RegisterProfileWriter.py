@@ -7,6 +7,7 @@ from xlwt import Workbook, easyxf
 from collections import OrderedDict
 from RegisterProfileEditor.Views.BaseClass import Block
 
+
 class JsonWriter(QRunnable):
     def __init__(self, blocks: list, filename: str, separately: bool=False):
         super(JsonWriter, self).__init__()
@@ -68,13 +69,27 @@ class JsonWriter(QRunnable):
 
 
 class ProfileWriter:
-    def __init__(self, block: Block=None, ip='', base_addr=None):
+    def __init__(self, block: Block=None, ip='', base_addr=None, add_index=False, index_info: dict=None):
         self.base_addr = base_addr
         self.workbook = Workbook()
         self.mode = 'mod_' + ip
         self.file = 'file_' + ip
         self.block = block
         self.ip = ip.upper()
+        self.has_index = False
+        if add_index:
+            self.index_info = index_info
+            self.has_index = True
+            self.index_sheet = self.workbook.add_sheet(sheetname='chip_index', cell_overwrite_ok=True)
+            self.index_des = OrderedDict(
+                CHIP="",
+                HEADPAGE=self.index_info.get('HEADPAGE', ''),
+                PREFIX=self.index_info.get('PREFIX', ''),
+                PPRANGE="0x100",
+                DATA_MUX_FILE=['File list of DATA_MUX (*.xml)'],
+                MEMORY_BLOCK='Memory Block of Chip Module Design',
+            )
+            self.index_blocks = [['NAME', 'OFFSET ADDR', 'NUMBER', 'DESCRIPTION', 'Belong to']]
         if ip != '':
             self.mod_sheet = self.workbook.add_sheet(sheetname=self.mode, cell_overwrite_ok=True)
             self.file_sheet = self.workbook.add_sheet(sheetname=self.file, cell_overwrite_ok=True)
@@ -96,7 +111,39 @@ class ProfileWriter:
     def set_block(self, block: Block):
         self.block = block
 
+    def create_index_blocks(self):
+        index_row = self.create_description(self.index_des, self.index_sheet, real_row=True)
+        for block in self.index_blocks:
+            for col, value in enumerate(block):
+                self.index_sheet.write(index_row, col, value)
+            index_row += 1
+
+        revisions = [
+            [''],
+            ['HISTORY', 'Revision History'],
+            ['PUBLIC', 'REV', 'DATE', 'DESCRIPTION', 'AUTHOR'],
+            ['Y', 'v0.0.1', self.index_info.get('DATE', ''),
+             self.index_info.get('DESCRIPTION', ''),
+             self.index_info.get('AUTHOR', '')]
+        ]
+        for items in revisions:
+            for col, item in enumerate(items):
+                self.index_sheet.write(index_row, col, item)
+            index_row += 1
+
     def create_mode_sheet(self):
+        last_offset = self.block.get_register(-1).offset
+        reg_num = int(last_offset, 16)//4+1
+        self.index_des['DATA_MUX_FILE'].append(
+            self.mode+'.xml'
+        )
+        self.index_blocks.append(
+            [
+                self.block.block_name, self.block.base_address,
+                reg_num, self.block.get('Description'),
+                self.block.block_name
+            ]
+        )
         mode_des = OrderedDict(
             DATA_MUX='Please provide the following information that will be shown in DATA_MUX Level',
             NAME=self.ip,
@@ -232,13 +279,17 @@ class ProfileWriter:
         self.file_sheet.col(15).width = 15000
 
     @staticmethod
-    def create_description(desr, sheet):
+    def create_description(desr, sheet, real_row=False):
         row = 0
         for key, items in desr.items():
             sheet.write(row, 0, key)
             if isinstance(items, list):
                 for i in range(len(items)):
-                    sheet.write(row + i, 1, items[i])
+                    if not real_row:
+                        sheet.write(row + i, 1, items[i])
+                    else:
+                        sheet.write(row, 1, items[i])
+                        row += 1
             else:
                 sheet.write(row, 1, items)
             row += 1
@@ -258,13 +309,14 @@ class ProfileWriter:
 
 
 class ExcelWriter(QRunnable):
-    def __init__(self, filename: str, blocks: list, separately: bool=False):
+    def __init__(self, filename: str, blocks: list, index_info: dict, separately: bool=False, ):
         super(ExcelWriter, self).__init__()
 
         self.filename = filename
         self.blocks = blocks
         self.signal = ProgressSignal()
         self.separately = separately
+        self.index_info = index_info
 
     def run(self):
         try:
@@ -309,7 +361,9 @@ class ExcelWriter(QRunnable):
                 writer = ProfileWriter(
                     block=None,
                     ip='',
-                    base_addr=None
+                    base_addr=None,
+                    add_index=True,
+                    index_info=self.index_info
                 )
                 for block in self.blocks:
                     writer.set_block(block)
@@ -338,10 +392,12 @@ class ExcelWriter(QRunnable):
                     writer.set_base_address(base_address)
                     writer.create_mode_sheet()
                     writer.create_file_sheet(df=block)
+                writer.create_index_blocks()
                 writer.__save__(self.filename)
                 self.signal.progress.emit(
                     f"# [INFO] {self.filename} Saved"
                 )
+
         except Exception as e:
             self.signal.progress.emit(
                 f"# [Error] Save {self.filename} failed\n"+traceback.format_exc()

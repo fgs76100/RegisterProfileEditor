@@ -1,8 +1,8 @@
-from PyQt5.QtWidgets import *
-from PyQt5.QtCore import *
-from PyQt5.QtGui import *
+from PyQt5.QtWidgets import QWidget, QLineEdit, QCompleter, QPushButton, QHBoxLayout, QVBoxLayout, QCheckBox
+from PyQt5.QtWidgets import QScrollArea
+from PyQt5.QtCore import Qt, QStringListModel, QModelIndex, pyqtSignal
+from PyQt5.QtGui import QStandardItem, QStandardItemModel, QFont, QColor
 from .widgets import LineEditDelegate, TableView
-
 
 
 class AnalyzerView(QWidget):
@@ -33,6 +33,7 @@ class AnalyzerView(QWidget):
         self.show_detail = QCheckBox('Show Detail', self)
         self.show_reserved = QCheckBox('Show Reserved', self)
         self.add_col = QPushButton('Add Column', self,)
+        self.add_col.setDisabled(True)
         ctrl_box.addWidget(self.show_detail)
         # ctrl_box.addWidget(detail_label)
         ctrl_box.addWidget(self.show_reserved)
@@ -144,6 +145,8 @@ class AnalyzerView(QWidget):
             self.table.setMinimumHeight(
                 (self.model.rowCount()+1)*self.table.rowHeight(0)
             )
+            self.add_col.setDisabled(False)
+
 
     def hide_reserved(self):
         # self.table.blockSignals(True)

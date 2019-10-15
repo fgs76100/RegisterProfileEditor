@@ -314,9 +314,13 @@ class BlockView(QWidget):
         if self.buffer is None:
             return
         row = self.tree.currentRow
+        news = []
+        for register in self.buffer:
+            news.append(register.copy())
+
         self.insert_row(
             row+1,
-            deepcopy(self.buffer),
+            news,
         )
         # self.buffer = None
 
@@ -324,11 +328,13 @@ class BlockView(QWidget):
         if self.buffer is None:
             return
         row = self.tree.currentRow
+        news = []
+        for register in self.buffer:
+            news.append(register.copy())
         self.insert_row(
             row,
-            deepcopy(self.buffer),
+            news,
         )
-        # self.buffer = None
 
     def getCurrentRoot(self):
         return self.model.itemFromIndex(self.tree.currentIndex()).parent()
@@ -360,13 +366,13 @@ class BlockView(QWidget):
                         GUI_NAME,
                     )
                     break
-                value = self.blocks[item.row()].get_register(row)
-                values.append(value)
+                register = self.blocks[item.row()].get_register(row)
+                values.append(register.copy())
 
             if not values:
                 self.buffer = None
             else:
-                self.buffer = deepcopy(values)
+                self.buffer = values
 
         except Exception as e:
             print(traceback.format_exc())

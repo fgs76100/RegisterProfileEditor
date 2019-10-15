@@ -85,9 +85,7 @@ class HTMLWriter(QRunnable):
                 f'# [Error] Create {self.filename} failed.\n'++traceback.format_exc()
             )
         finally:
-            self.signal.progress.emit(
-                f'# [INFO] Create {self.filename} successfully.'
-            )
+            self.signal.done.emit()
 
 
 def change_reserved(df):

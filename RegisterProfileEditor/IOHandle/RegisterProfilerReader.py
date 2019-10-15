@@ -25,7 +25,6 @@ class RegisterProfileReader(QObject):
         }
         self.module_info = {}
 
-
     def get_col(self, module):
         if not module:
             col_to_read = ['NAME', 'OFFSET ADDR', 'NUMBER', 'DESCRIPTION', 'Belong to']
