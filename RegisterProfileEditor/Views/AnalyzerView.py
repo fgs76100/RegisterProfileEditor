@@ -1,8 +1,54 @@
 from PyQt5.QtWidgets import QWidget, QLineEdit, QCompleter, QPushButton, QHBoxLayout, QVBoxLayout, QCheckBox
-from PyQt5.QtWidgets import QScrollArea
+from PyQt5.QtWidgets import QScrollArea, QMenu, QHeaderView
 from PyQt5.QtCore import Qt, QStringListModel, QModelIndex, pyqtSignal
-from PyQt5.QtGui import QStandardItem, QStandardItemModel, QFont, QColor
+from PyQt5.QtGui import QStandardItem, QStandardItemModel, QFont, QColor, QContextMenuEvent
 from .widgets import LineEditDelegate, TableView, TextEditDelegate
+
+
+class MetaHeaderView(QHeaderView):
+    # source code, and do some miner changes
+    # https://www.qtcentre.org/threads/12835-How-to-edit-Horizontal-Header-Item-in-QTableWidget?p=224376#post224376
+    def __init__(self, orientation, parent=None):
+        super(MetaHeaderView, self).__init__(orientation, parent)
+        # self.setMovable(True)
+        # self.setClickable(True)
+        self.setSectionsClickable(True)
+
+        # This block sets up the edit line by making setting the parent
+        # to the Headers Viewport.
+        self.line = QLineEdit(parent=self.viewport())  # Create
+        self.line.setAlignment(Qt.AlignTop)  # Set the Alignmnet
+        self.line.setHidden(True)  # Hide it till its needed
+        # This is needed because I am having a werid issue that I believe has
+        # to do with it losing focus after editing is done.
+        self.line.blockSignals(True)
+        self.sectionedit = 0
+        # Connects to double click
+        self.sectionDoubleClicked.connect(self.editHeader)
+        self.line.editingFinished.connect(self.doneEditing)
+
+    def doneEditing(self):
+        # This block signals needs to happen first otherwise I have lose focus
+        # problems again when there are no rows
+        self.line.blockSignals(True)
+        self.line.setHidden(True)
+        newname = self.line.text()
+        self.model().setHeaderData(self.sectionedit, Qt.Horizontal, newname)
+        self.setCurrentIndex(QModelIndex())
+
+    def editHeader(self, section):
+        # This block sets up the geometry for the line edit
+        edit_geometry = self.line.geometry()
+        edit_geometry.setWidth(self.sectionSize(section))
+        edit_geometry.moveLeft(self.sectionViewportPosition(section))
+        self.line.setGeometry(edit_geometry)
+        self.line.setText(str(self.model().headerData(section, Qt.Horizontal)))
+        self.line.setHidden(False)  # Make it visiable
+        self.line.blockSignals(False)  # Let it send signals
+        self.line.setFocus()
+        self.line.selectAll()
+        self.sectionedit = section
+
 
 
 class AnalyzerView(QWidget):
@@ -49,7 +95,7 @@ class AnalyzerView(QWidget):
         self.table = TableView(self)
         self.table.setWordWrap(True)
         self.table.setModel(self.model)
-
+        self.table.setHorizontalHeader(MetaHeaderView(Qt.Horizontal, parent=self.table))
         vbox = QVBoxLayout()
         vbox.addLayout(hbox1)
         # vbox.addWidget(self.entry)
@@ -68,6 +114,7 @@ class AnalyzerView(QWidget):
         self.show_reserved.stateChanged.connect(self.hide_reserved)
         self.entry.textChanged.connect(self.create_rows)
         # self.table.dataChangedSignal.connect(self.test)
+        self.default_col = list(self.cols.keys()).index('Default')
         self.create_cols()
         self.detail()
 
@@ -119,10 +166,14 @@ class AnalyzerView(QWidget):
                 item.setText(self.binary2hex(total[lsb:msb+1][::-1], width=width//4))
 
     def create_cols(self):
-        rows = [
-            QStandardItem(col) for col in self.cols.keys()
-        ]
+        rows = []
 
+        for _ in self.cols.keys():
+            cell = QStandardItem('')
+            cell.setEditable(False)
+            rows.append(cell)
+
+        self.model.setHorizontalHeaderLabels(self.cols.keys())
         self.model.appendRow(rows)
 
     def create_rows(self):
@@ -191,6 +242,9 @@ class AnalyzerView(QWidget):
             self.model.columnCount() - 1,
             delegate
         )
+        header = self.table.horizontalHeader()
+        # QHeaderView.edit
+        # header.openPersistentEditor()
         self.hide_reserved()
 
     def detail(self):
@@ -234,6 +288,7 @@ class AnalyzerView(QWidget):
             except Exception as e:
                 self.dataformat[row] = [msb, lsb, '0x0']
         self.dataformat[0] = [31, 0, self.binary2hex(total, width=8)]
+        self.model.item(0, self.default_col).setText(self.binary2hex(total, width=8))
 
     @staticmethod
     def binary2hex(binary: str, width: int):
@@ -250,6 +305,23 @@ class AnalyzerView(QWidget):
                 return f"{int(value):0{width}b}"
         except Exception as e:
             return f"{0:0{width}b}"
+
+    def contextMenuEvent(self, event: QContextMenuEvent):
+        col = self.table.columnAt(event.pos().x())
+        if col < len(self.cols):
+            return
+        menu = QMenu(self.table)
+
+        delete = menu.addAction('Delete this column')
+        # delete.setShortcut('Ctrl+D')
+        # delete.setShortcutContext(Qt.WidgetWithChildrenShortcut)
+        action = menu.exec_(self.mapToGlobal(event.pos()))
+
+        if action == delete:
+            self.delete_column(col)
+
+    def delete_column(self, col):
+        self.model.removeColumn(col)
 
 
 class AnalyzerWapper(QWidget):
@@ -295,8 +367,6 @@ class AnalyzerWapper(QWidget):
     def reload_address(self, address_space: dict):
         self.address_space = address_space
         # self.string_model.setStringList(address_space.keys())
-
-
 
 
 

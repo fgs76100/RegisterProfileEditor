@@ -21,6 +21,7 @@ from .Views.BlockView import BlockView
 from datetime import date
 
 
+
 class App(QMainWindow):
 
     reload_address = pyqtSignal(dict)
@@ -153,23 +154,25 @@ class App(QMainWindow):
                 menu = menubar.addMenu(label)
                 for item in items:
                     text = item.get('text')
-                    sc = item.get('shortcut', None)
+                    sc = item.get('shortcut', '')
                     icon = item.get('icon', None)
                     sub = item.get('sub', None)
                     if sub:
                         submenu = QMenu(text, self)
                         for each_sub in sub:
                             text = each_sub.get('text')
+                            icon = each_sub.get('icon', None)
                             action = QAction(text, self)
                             action.triggered.connect(
                                 getattr(self, each_sub.get('action'))
                             )
+                            if icon:
+                                action.setIcon(qta.icon(icon))
                             submenu.addAction(action)
                         menu.addMenu(submenu)
                         continue
                     action = QAction(text, self)
-                    if sc:
-                        action.setShortcut(sc)
+                    action.setShortcut(sc)
                     if icon:
                         action.setIcon(qta.icon(icon))
                     action.triggered.connect(
@@ -456,6 +459,8 @@ class App(QMainWindow):
         self.info.thread_cnt += 1
         self.threadpool.start(writer)
 
+    def doNothing(self):
+        pass
 
 
 def trap_exc_during_debug(*args):
@@ -474,12 +479,9 @@ def main():
     app = QApplication(sys.argv)
 
     font = QFont("Verdana", 12)
-    # timer = QTimer()
-    # timer.timeout.connect(lambda: None)
-    # timer.start(100)
     app.setFont(font)
-    window = App(sys.argv[1])
-    # window = App()
+    # window = App(sys.argv[1])
+    window = App()
     sys.exit(app.exec())
 
 

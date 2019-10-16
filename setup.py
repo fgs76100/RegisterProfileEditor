@@ -14,11 +14,11 @@ from setuptools import find_packages, setup, Command
 # Package meta-data.
 NAME = 'RegisterProfileEditor'
 DESCRIPTION = 'A GUI for editing Register Profile'
-URL = 'https://github.com/me/myproject'
+URL = 'https://github.com/fgs76100/RegisterProfileEditor'
 EMAIL = 'fgs76100@gmail.com '
-AUTHOR = 'Berdych'
+AUTHOR = 'fgs76100'
 REQUIRES_PYTHON = '>=3.6.0'
-VERSION = '1.0.0'
+VERSION = '0.0.1'
 
 # What packages are required for this module to be executed?
 REQUIRED = [
@@ -107,9 +107,9 @@ setup(
     # If your package is a single module, use this instead of 'packages':
     # py_modules=['mypackage'],
 
-    # entry_points={
-    #     'console_scripts': ['mycli=mymodule:cli'],
-    # },
+    entry_points={
+        'console_scripts': ['RegisterProfileEditor=RegisterProfileEditor.__main__:main'],
+    },
     install_requires=REQUIRED,
     extras_require=EXTRAS,
     include_package_data=True,

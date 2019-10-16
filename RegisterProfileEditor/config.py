@@ -1,4 +1,5 @@
 from collections import OrderedDict
+from .__version__ import __version__
 
 caption_formatter = "{Module}/{Register}"
 register_formatter = "{Offset}({Name})"
@@ -243,7 +244,7 @@ field_columns = OrderedDict([
         require=True,
     )),
     ("Default", dict(
-        width=100,
+        width=120,
         require=True,
     )),
     ("Testable", dict(
@@ -297,10 +298,12 @@ menubar_configs = [
                     dict(
                         text="As Excel",
                         action="saveExcelSeparately",
+                        icon='fa.file-excel-o'
                     ),
                     dict(
                         text="As Json",
                         action="saveJsonSeparately",
+                        icon='fa.file-text-o'
                     ),
                 ]
             ),
@@ -339,11 +342,35 @@ menubar_configs = [
         "Style": [
             dict(
                 text='Font',
-                shortcut=None,
+                # shortcut=None,
                 action='selectFont',
                 icon='fa.font'
             ),
         ]
+    },
+    {
+        "About": [
+            dict(
+                text=f"Version: {__version__}",
+                icon='fa.key',
+                action='doNothing',
+            ),
+            dict(
+                text='Author: Berdych',
+                icon='fa.user-secret',
+                action='doNothing',
+            )
+        ]
     }
 ]
+
+
+
+
+
+
+
+
+
+
 
