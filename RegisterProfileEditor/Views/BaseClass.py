@@ -72,7 +72,14 @@ class Register:
                 text = field.get(key, None)
                 if text is None:
                     text = config.get('default', '')
+                else:
+                    if key == 'Field':
+                        if text.lower() == 'reserved':
+                            text = 'RESERVED'
                 field[key] = str(text).strip()
+
+
+
 
     def inti_register(self):
         for col, config in register_columns.items():

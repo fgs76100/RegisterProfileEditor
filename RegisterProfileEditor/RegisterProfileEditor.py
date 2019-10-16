@@ -272,7 +272,8 @@ class App(QMainWindow):
 
     def newModule(self):
         new = InputDialog(
-            title="New Module", parent=self, inputs=block_columns
+            title="New Module", parent=self, inputs=block_columns,
+            label="Module Information"
         )
         info, yes = new.get()
         if yes:
@@ -359,11 +360,12 @@ class App(QMainWindow):
                             "DATE": {'default': date.today().strftime("%Y/%m/%d")},
                             "AUTHOR": {},
                             "DESCRIPTION": {}
-                        }
+                        },
+                        label='Press Cancel to save without chip_index'
                     )
                     index_info, yes = dialog.get()
                     if not yes:
-                        return
+                        index_info = {}
                 else:
                     index_info = {}
                 writer = ExcelWriter(

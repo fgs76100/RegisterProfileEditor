@@ -389,7 +389,8 @@ class BlockView(QWidget):
                 parent=self,
                 title=GUI_NAME,
                 inputs=block_columns,
-                values=block
+                values=block,
+                label='Module Information'
             )
             info, save = dialog.get()
             if save:

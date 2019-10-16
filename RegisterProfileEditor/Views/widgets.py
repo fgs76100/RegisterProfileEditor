@@ -2,7 +2,7 @@ from PyQt5.QtWidgets import QWidget, QTreeView, QTableView, QLineEdit, QVBoxLayo
 from PyQt5.QtWidgets import QStyledItemDelegate, QTextEdit, QPlainTextEdit, QListWidget, QDialog, QDialogButtonBox
 from PyQt5.QtWidgets import QFormLayout, QFileDialog, QMessageBox, QLabel, QPushButton, QCheckBox, QAbstractItemView
 from PyQt5.QtWidgets import QUndoStack, QAbstractItemDelegate, QStyleOptionViewItem, QCompleter, QListWidgetItem
-from PyQt5.QtWidgets import QTabWidget, QApplication, QStyle
+from PyQt5.QtWidgets import QTabWidget, QApplication, QStyle, QGroupBox
 from PyQt5.QtCore import QModelIndex, Qt, QAbstractItemModel, QStringListModel, QSizeF, pyqtSignal, QRunnable
 from PyQt5.QtCore import QRegExp
 from PyQt5.QtGui import QValidator, QKeyEvent, QIntValidator, QTextCursor, QTextDocument, QAbstractTextDocumentLayout
@@ -923,12 +923,13 @@ class LineEdit(QLineEdit):
 
 class InputDialog(QDialog):
 
-    def __init__(self, title: str, inputs: dict, parent=None, values: dict=None):
+    def __init__(self, title: str, inputs: dict, parent=None, values: dict=None, label=None):
         super(InputDialog, self).__init__(parent)
         self.setWindowTitle(title)
         btn = QDialogButtonBox.Save | QDialogButtonBox.Cancel
         btnbox = QDialogButtonBox(btn, self)
         layout = QFormLayout()
+
         self.widgets = OrderedDict()
         self.resize(600, 400)
         if values is None:
@@ -939,18 +940,25 @@ class InputDialog(QDialog):
             widget = config.get('widget', None)
             if widget == 'textEdit':
                 widget = TextEdit(parent=self)
-                widget.setText(text)
+                widget.setText(str(text))
             else:
                 widget = LineEdit(parent=self, validator=validator)
                 widget.setText(text)
             layout.addRow(
                 QLabel(key), widget
             )
-            widget.setText(text)
+            widget.setText(str(text))
             self.widgets[key] = widget
 
         layout.addWidget(btnbox)
-        self.setLayout(layout)
+        if label:
+            grpbox = QGroupBox(label)
+            grpbox.setLayout(layout)
+            vbox = QVBoxLayout()
+            vbox.addWidget(grpbox)
+            self.setLayout(vbox)
+        else:
+            self.setLayout(layout)
         btnbox.accepted.connect(self.accept)
         btnbox.rejected.connect(self.reject)
 

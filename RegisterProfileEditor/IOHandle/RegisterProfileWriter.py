@@ -69,7 +69,7 @@ class JsonWriter(QRunnable):
 
 
 class ProfileWriter:
-    def __init__(self, block: Block=None, ip='', base_addr=None, add_index=False, index_info: dict=None):
+    def __init__(self, block: Block=None, ip='', base_addr=None, index_info: dict=None):
         self.base_addr = base_addr
         self.workbook = Workbook()
         self.mode = 'mod_' + ip
@@ -77,7 +77,7 @@ class ProfileWriter:
         self.block = block
         self.ip = ip.upper()
         self.has_index = False
-        if add_index:
+        if index_info:
             self.index_info = index_info
             self.has_index = True
             self.index_sheet = self.workbook.add_sheet(sheetname='chip_index', cell_overwrite_ok=True)
@@ -112,6 +112,8 @@ class ProfileWriter:
         self.block = block
 
     def create_index_blocks(self):
+        if not self.has_index:
+            return
         index_row = self.create_description(self.index_des, self.index_sheet, real_row=True)
         for block in self.index_blocks:
             for col, value in enumerate(block):
@@ -132,18 +134,19 @@ class ProfileWriter:
             index_row += 1
 
     def create_mode_sheet(self):
-        last_offset = self.block.get_register(-1).offset
-        reg_num = int(last_offset, 16)//4+1
-        self.index_des['DATA_MUX_FILE'].append(
-            self.mode+'.xml'
-        )
-        self.index_blocks.append(
-            [
-                self.block.block_name, self.block.base_address,
-                reg_num, self.block.get('Description'),
-                self.block.block_name
-            ]
-        )
+        if self.has_index:
+            last_offset = self.block.get_register(-1).offset
+            reg_num = int(last_offset, 16)//4+1
+            self.index_des['DATA_MUX_FILE'].append(
+                self.mode+'.xml'
+            )
+            self.index_blocks.append(
+                [
+                    self.block.block_name, self.block.base_address,
+                    reg_num, self.block.get('Description'),
+                    self.block.block_name
+                ]
+            )
         mode_des = OrderedDict(
             DATA_MUX='Please provide the following information that will be shown in DATA_MUX Level',
             NAME=self.ip,
@@ -154,7 +157,7 @@ class ProfileWriter:
             DATE='',
             VERSION=self.block.get('Version'),
             ABSTRACT=self.base_addr,
-            HISTORY=self.block.get('Revision'),
+            HISTORY=self.block.get('Revisions'),
             REG_FILE=['File list of registers in DATA_MUX (*.xml)', self.file + '.xml'],
         )
         self.create_description(desr=mode_des, sheet=self.mod_sheet)
@@ -171,7 +174,7 @@ class ProfileWriter:
             DATE='',
             VERSION=self.block.get('Version'),
             ABSTRACT=self.base_addr,
-            HISTORY=self.block.get('Revision'),
+            HISTORY=self.block.get('Revisions'),
         )
 
         row = ['REGISTER', 'Content of registers', '', '', '', '', '', '', '', '', 'FIELD', 'Content of register fields']
@@ -362,7 +365,6 @@ class ExcelWriter(QRunnable):
                     block=None,
                     ip='',
                     base_addr=None,
-                    add_index=True,
                     index_info=self.index_info
                 )
                 for block in self.blocks:
