@@ -79,8 +79,6 @@ class Register:
                 field[key] = str(text).strip()
 
 
-
-
     def inti_register(self):
         for col, config in register_columns.items():
             self._register[col] = config.get('default', '')
