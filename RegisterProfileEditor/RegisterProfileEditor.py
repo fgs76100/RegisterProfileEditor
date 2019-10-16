@@ -19,7 +19,8 @@ from .Views.AnalyzerView import AnalyzerWapper
 from .Views.FieldView import FieldView
 from .Views.BlockView import BlockView
 from datetime import date
-
+from .styles import darkmode
+# import importlib
 
 
 class App(QMainWindow):
@@ -70,6 +71,7 @@ class App(QMainWindow):
         self.hbox.addWidget(splitter)
         self.setCentralWidget(QWidget(self))
         self.tabs = TabLayout(self)
+        self.tabs.setContentsMargins(0, 0, 0, 0)
         tab1 = QWidget(self)
         tab1.setLayout(self.hbox)
         self.analyzer = AnalyzerWapper(
@@ -266,6 +268,7 @@ class App(QMainWindow):
             else:
                 self.remove_backup()
             self.is_write = False
+            # self.info.close()
             # self.info.upload_text(
             #     '# [INFO] Program Ends.'
             # )
@@ -462,6 +465,8 @@ class App(QMainWindow):
         self.threadpool.start(writer)
 
     def doNothing(self):
+        # importlib.reload(darkmode)
+        # self.setStyleSheet(darkmode.style)
         pass
 
 
@@ -479,7 +484,8 @@ def trap_exc_during_debug(*args):
 def main():
     # sys.excepthook = trap_exc_during_debug
     app = QApplication(sys.argv)
-
+    app.setAttribute(Qt.AA_UseStyleSheetPropagationInWidgetStyles, True)
+    app.setStyleSheet(darkmode.style)
     font = QFont("Verdana", 12)
     app.setFont(font)
     # window = App(sys.argv[1])

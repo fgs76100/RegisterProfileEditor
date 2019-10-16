@@ -67,7 +67,7 @@ class AnalyzerView(QWidget):
         completer.setFilterMode(Qt.MatchContains)
         self.entry.setCompleter(completer)
         self.entry.setMinimumWidth(500)
-
+        self.entry.setMinimumHeight(35)
         self.close_btn = QPushButton('X', self,)
         self.close_btn.setMaximumWidth(40)
         hbox1 = QHBoxLayout()
@@ -200,7 +200,7 @@ class AnalyzerView(QWidget):
                 self.add_column()
             self.hide_reserved()
             self.table.setMinimumHeight(
-                (self.model.rowCount()+1)*self.table.rowHeight(0)
+                (self.model.rowCount()+1)*self.table.rowHeight(0)+10
             )
             self.add_col.setDisabled(False)
 
@@ -214,13 +214,13 @@ class AnalyzerView(QWidget):
                 if hide:
                     item.setFont(QFont(self.font().family(), self.font().pointSize()*2//3))
                     item.setForeground(QColor.fromRgb(
-                        204, 204, 204
+                        100, 100, 100
                     ))
                 else:
                     self.table.setStyleSheet("")
                     item.setFont(self.font())
                     item.setForeground(QColor.fromRgb(
-                        0, 0, 0
+                        217, 217, 217
                     ))
         # self.table.blockSignals(False)
 

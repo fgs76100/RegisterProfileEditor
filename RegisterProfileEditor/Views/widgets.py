@@ -40,6 +40,7 @@ class HighlightDelegate(QStyledItemDelegate):
         # https://stackoverflow.com/questions/34623036/implementing-a-delegate-for-wordwrap-in-a-qtreeview-qt-pyside-pyqt
         painter.save()
         doc = QTextDocument(self)
+        option.palette.setColor(QPalette.Highlight, QColor.fromRgb(30, 136, 229))
         options = QStyleOptionViewItem(option)
         self.initStyleOption(options, index)
         doc.setPlainText(options.text)
@@ -47,17 +48,21 @@ class HighlightDelegate(QStyledItemDelegate):
         # if self.keywords:
         self.keywordHighlight(doc)
         options.text = ""
-        style = QApplication.style()
+
+        options.palette.setColor(QPalette.Highlight, QColor.fromRgb(30, 136, 229))
+        style = QApplication.style() if options.widget is None \
+            else options.widget.style()
         style.drawControl(QStyle.CE_ItemViewItem, options, painter)  # for selection highlight
 
         ctx = QAbstractTextDocumentLayout.PaintContext()
+
         if index.data(Qt.UserRole) == 'reserved':
-            ctx.palette.setColor(QPalette.Text, QColor.fromRgb(204, 204, 204))
+            ctx.palette.setColor(QPalette.Text, QColor.fromRgb(100, 100, 100))
             doc.setDefaultFont(QFont(option.font.family(), option.font.pointSize()*2//3))
 
         else:
+            ctx.palette.setColor(QPalette.Text, QColor.fromRgb(217, 217, 217))
             doc.setDefaultFont(option.font)
-
         textRect = option.rect
         # margin = 4
         # textRect.setTop(textRect.top() + margin)
@@ -73,7 +78,7 @@ class HighlightDelegate(QStyledItemDelegate):
         cursor = QTextCursor(doc)
         cursor.beginEditBlock()
         fmt = QTextCharFormat()
-        fmt.setBackground(Qt.yellow)
+        fmt.setBackground(Qt.darkYellow)
 
         highlightCursor = QTextCursor(doc)
         while not highlightCursor.isNull() and not highlightCursor.atEnd():
@@ -115,7 +120,7 @@ class InfoDialog(QDialog):
 
     def highlihgter(self):
         highlight_rules = [
-            ('INFO', Qt.darkBlue),
+            ('INFO', Qt.darkGreen),
             ('Warning', Qt.darkYellow),
             ('Error', Qt.darkRed)
         ]

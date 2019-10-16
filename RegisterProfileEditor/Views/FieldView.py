@@ -31,6 +31,8 @@ class FieldView(QWidget):
         self.entry = QLineEdit(self)
         self.entry.setClearButtonEnabled(True)
         self.entry.setPlaceholderText('Filter table by ...')
+        self.entry.setMinimumWidth(300)
+        self.entry.setMinimumHeight(35)
         self.caption = QLabel('')
         # self.hidden_rows = []
         # self.valid_index = []
@@ -45,7 +47,7 @@ class FieldView(QWidget):
         hbox.addWidget(self.linting_en)
         hbox.addWidget(QLabel("Linting"))
         hbox.addWidget(self.entry)
-
+        hbox.addStretch(1)
         vbox = QVBoxLayout()
         vbox.addLayout(hbox)
         vbox.addWidget(self.caption)

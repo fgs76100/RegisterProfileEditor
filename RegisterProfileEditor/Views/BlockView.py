@@ -32,7 +32,8 @@ class BlockView(QWidget):
         self.entry = QLineEdit(self)
         self.entry.setPlaceholderText('Search for ...')
         self.entry.setClearButtonEnabled(True)
-
+        self.entry.setMinimumHeight(35)
+        self.entry.setMaximumWidth(250)
         vbox = QVBoxLayout()
         vbox.addWidget(self.entry)
         vbox.addWidget(self.tree)
