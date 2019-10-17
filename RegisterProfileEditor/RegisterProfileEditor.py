@@ -176,7 +176,12 @@ class App(QMainWindow):
                     action = QAction(text, self)
                     action.setShortcut(sc)
                     if icon:
-                        action.setIcon(qta.icon(icon))
+                        action.setIcon(
+                            qta.icon(
+                                icon,
+                                color='gray'
+                            )
+                        )
                     action.triggered.connect(
                         getattr(self, item.get('action'))
                         # self.actions.get()

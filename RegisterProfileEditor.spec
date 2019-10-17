@@ -6,7 +6,11 @@ block_cipher = None
 a = Analysis(['cli.py'],
              pathex=['C:\\Users\\berdych\\PycharmProjects\\RegisterProfileEditor\\venv\\Lib\\site-packages\\PyQt5', 'C:\\Users\\berdych\\PycharmProjects\\RegisterProfileEditor'],
              binaries=[],
-             datas=[('C:\\Users\\berdych\\PycharmProjects\\RegisterProfileEditor\\RegisterProfileEditor\\templates', 'RegisterProfileEditor\\templates' ), ('C:\\Users\\berdych\\PycharmProjects\\RegisterProfileEditor\\venv\\Lib\\site-packages\\PyQt5', 'PyQt5')],
+             datas=[
+                ('C:\\Users\\berdych\\PycharmProjects\\RegisterProfileEditor\\RegisterProfileEditor\\templates', 'RegisterProfileEditor\\templates' ),
+                ('C:\\Users\\berdych\\PycharmProjects\\RegisterProfileEditor\\venv\\Lib\\site-packages\\PyQt5', 'PyQt5'),
+                ('C:\\Users\\berdych\\PycharmProjects\\RegisterProfileEditor\\RegisterProfileEditor\\styles', 'RegisterProfileEditor\\styles' )
+             ],
              hiddenimports=[],
              hookspath=[],
              runtime_hooks=[],

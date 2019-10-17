@@ -1,9 +1,10 @@
+import os
 
 bg = '#373939'
 black = '#333333'
 light_bg = '#3E3F3F'
 
-item_selected = '#0056af'
+item_selected = '#1f4287'
 
 text = '#d9d9d9'
 
@@ -11,10 +12,12 @@ border_color = '#4d4d4d'
 dark_border_color = '#262626'
 selected_color = '#808080'
 
+here = os.path.abspath(os.path.dirname(__file__))
+
 style = f"""
 
 QWidget , QWidget * {{
-    background-color: {bg};
+    background-color: {light_bg};
     color: {text};
     
 }}
@@ -101,16 +104,18 @@ QMenuBar::item:selected {{ /* when selected using mouse or keyboard */
 
 /* LineEdit view */
 
-QLineEdit {{
+QLineEdit, QTextEdit, QPlainTextEdit {{
     border: 2px solid {border_color};
     border-radius: 8px;
     background: {light_bg}; 
     /* selection-background-color: darkgray; */
 }}
 
-QLineEdit:focus {{
+QLineEdit:focus, QTextEdit:focus, QPlainTextEdit:focus {{
     border: 3px solid {item_selected};
 }}
+
+
 
 /* Tree view */
 
@@ -132,9 +137,18 @@ QTreeView::item:selected {{
     background: {item_selected};
 }}
 
-QTreeView::branch {{
-    background-image: {text};
+QTreeView::branch:has-children:!has-siblings:closed, QTreeView::branch:closed:has-children:has-siblings {{
+        border-image: none;
+        image: url(RegisterProfileEditor/styles/right-arrow.png);
+        padding: 4px;
 }}
+
+QTreeView::branch:open:has-children:!has-siblings, QTreeView::branch:open:has-children:has-siblings  {{
+        border-image: none;
+        image: url(RegisterProfileEditor/styles/down-arrow.png);
+        padding: 4px;
+}}
+
 
 /* Scroll bar */
 
@@ -197,8 +211,10 @@ QPushButton:pressed {{
 }}
 
 QPushButton:disabled {{
-    background-color: {bg}; 
+    background-color: {light_bg}; 
     border: none;
-    color: {bg}; 
+    color: {light_bg}; 
 }}
+
+
 """

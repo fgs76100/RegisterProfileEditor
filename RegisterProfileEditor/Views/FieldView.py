@@ -200,7 +200,7 @@ class FieldView(QWidget):
             if buffer and self.buffer is None:
                 action.setEnabled(False)
             if icon:
-                action.setIcon(qta.icon(icon))
+                action.setIcon(qta.icon(icon, color='gray'))
             sc = config.get('shortcut', None)
             func = getattr(self, config.get('action'))
             if sc:

@@ -40,7 +40,7 @@ class HighlightDelegate(QStyledItemDelegate):
         # https://stackoverflow.com/questions/34623036/implementing-a-delegate-for-wordwrap-in-a-qtreeview-qt-pyside-pyqt
         painter.save()
         doc = QTextDocument(self)
-        option.palette.setColor(QPalette.Highlight, QColor.fromRgb(30, 136, 229))
+        # option.palette.setColor(QPalette.HighlightedText, QColor.fromRgb(30, 136, 200))
         options = QStyleOptionViewItem(option)
         self.initStyleOption(options, index)
         doc.setPlainText(options.text)
@@ -48,11 +48,13 @@ class HighlightDelegate(QStyledItemDelegate):
         # if self.keywords:
         self.keywordHighlight(doc)
         options.text = ""
+        # print(dir(options.palette))
 
-        options.palette.setColor(QPalette.Highlight, QColor.fromRgb(30, 136, 229))
+        # print(options.palette.Highlight)
         style = QApplication.style() if options.widget is None \
             else options.widget.style()
-        style.drawControl(QStyle.CE_ItemViewItem, options, painter)  # for selection highlight
+        options.palette.setColor(QPalette.Window, QColor.fromRgb(30, 90, 200))
+        style.drawControl(QStyle.CE_ItemViewItem, options, painter, options.widget)  # for selection highlight
 
         ctx = QAbstractTextDocumentLayout.PaintContext()
 
@@ -63,6 +65,7 @@ class HighlightDelegate(QStyledItemDelegate):
         else:
             ctx.palette.setColor(QPalette.Text, QColor.fromRgb(217, 217, 217))
             doc.setDefaultFont(option.font)
+
         textRect = option.rect
         # margin = 4
         # textRect.setTop(textRect.top() + margin)

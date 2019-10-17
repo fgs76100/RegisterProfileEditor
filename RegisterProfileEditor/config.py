@@ -95,7 +95,7 @@ register_contextmenu = [
         label='Add Analyzer',
         shortcut='A',
         action='addAnalyzer',
-        icon='fa.clipboard',
+        icon='fa.th',
     ),
     dict(
         label='Append copy',
