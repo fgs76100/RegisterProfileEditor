@@ -169,7 +169,7 @@ class App(QMainWindow):
                                 getattr(self, each_sub.get('action'))
                             )
                             if icon:
-                                action.setIcon(qta.icon(icon))
+                                action.setIcon(qta.icon(icon, color='gray'))
                             submenu.addAction(action)
                         menu.addMenu(submenu)
                         continue

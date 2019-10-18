@@ -1,31 +1,26 @@
-import os
+# import os
 
-bg = '#373939'
+bg = '#333333'
 black = '#333333'
 light_bg = '#3E3F3F'
 
-item_selected = '#1f4287'
+item_selected = '#62757f'
 
 text = '#d9d9d9'
 
-border_color = '#4d4d4d'
+border_color = '#4d4d4d'  # more lighter than light_bg
 dark_border_color = '#262626'
 selected_color = '#808080'
-
-here = os.path.abspath(os.path.dirname(__file__))
-
+light_border_color = '#666666'
+# here = os.path.abspath(os.path.dirname(__file__))
+editor_focus_color = '#bcaaa4'
+editing_color = '#03DAC6'
 style = f"""
 
 QWidget , QWidget * {{
     background-color: {light_bg};
     color: {text};
     
-}}
-
-QTableView, QTableView * {{
-    background-color: {bg};
-    color: {text};
-    border-color: transparent;
 }}
 
 QHeaderView::section {{
@@ -84,6 +79,11 @@ QMenu::item:selected {{ /* when user selects item using mouse or keyboard */
     background-color: {item_selected};
 }}
 
+QMenu::item:disabled {{ /* when user selects item using mouse or keyboard */
+    color: {border_color};
+    background-color: transparent;
+}}
+
 /* MenuBar view */
 
 QMenuBar {{
@@ -105,14 +105,14 @@ QMenuBar::item:selected {{ /* when selected using mouse or keyboard */
 /* LineEdit view */
 
 QLineEdit, QTextEdit, QPlainTextEdit {{
-    border: 2px solid {border_color};
+    border: 1px solid {light_border_color};
     border-radius: 8px;
     background: {light_bg}; 
     /* selection-background-color: darkgray; */
 }}
 
 QLineEdit:focus, QTextEdit:focus, QPlainTextEdit:focus {{
-    border: 3px solid {item_selected};
+    border: 2px solid {editor_focus_color};
 }}
 
 
@@ -120,12 +120,14 @@ QLineEdit:focus, QTextEdit:focus, QPlainTextEdit:focus {{
 /* Tree view */
 
 QTreeView {{
-
+    outline: 0; /* cancel the dotted border */
     background: {light_bg};
     border-color: transparent;
 }}
 
 QTreeView::item {{
+    border: none;
+    outline: none;
     border-color: transparent;
 }}
 
@@ -134,7 +136,14 @@ QTreeView::item:hover {{
 }}
 
 QTreeView::item:selected {{
+    
     background: {item_selected};
+    border: none;
+}}
+
+QWidget#Editor {{
+    border: 1px solid {editing_color};
+    border-radius: 0px;
 }}
 
 QTreeView::branch:has-children:!has-siblings:closed, QTreeView::branch:closed:has-children:has-siblings {{
@@ -184,16 +193,19 @@ QScrollBar::handle {{
 /* table */
 
 QTableView {{
-    alternate-background-color: #404242;
+    outline: 0; /* cancel the dotted border */
+    alternate-background-color: #3a3a3a;
     background: {bg};
 }}
 
 QTableView QTableCornerButton::section {{
-    background: transparent;
+    background: {light_bg};
 }}
 
 QTableView::item:selected {{
+    outline: 0; /* cancel the dotted border */
     selection-background-color: {item_selected};
+    color: #f5f5f5;
 }}
 
 QPushButton {{ 
@@ -216,5 +228,20 @@ QPushButton:disabled {{
     color: {light_bg}; 
 }}
 
+/* List View */
+
+QListView {{
+    outline: 0;
+}}
+
+QListView::item:selected {{
+    outline: 0;
+    background-color: {item_selected};
+}}
 
 """
+
+
+
+
+

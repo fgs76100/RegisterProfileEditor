@@ -41,6 +41,9 @@ class HighlightDelegate(QStyledItemDelegate):
         painter.save()
         doc = QTextDocument(self)
         # option.palette.setColor(QPalette.HighlightedText, QColor.fromRgb(30, 136, 200))
+        # remove dotted border in table
+        if option.state & QStyle.State_HasFocus:
+            option.state = option.state ^ QStyle.State_HasFocus
         options = QStyleOptionViewItem(option)
         self.initStyleOption(options, index)
         doc.setPlainText(options.text)
@@ -53,7 +56,6 @@ class HighlightDelegate(QStyledItemDelegate):
         # print(options.palette.Highlight)
         style = QApplication.style() if options.widget is None \
             else options.widget.style()
-        options.palette.setColor(QPalette.Window, QColor.fromRgb(30, 90, 200))
         style.drawControl(QStyle.CE_ItemViewItem, options, painter, options.widget)  # for selection highlight
 
         ctx = QAbstractTextDocumentLayout.PaintContext()
@@ -372,13 +374,17 @@ class SearchAndReplace(QDialog):
         # )
         self.textToSearch.setStyleSheet(
             """
-            background: red
+            background: #990000
             """
         )
 
     def beginToSearch(self):
         self.msg.setHidden(True)
         self.textToSearch.setStyleSheet("")
+
+    def reject(self):
+        self.beginToSearch()
+        super(SearchAndReplace, self).reject()
 
 
 class TableView(QTableView):
@@ -387,7 +393,6 @@ class TableView(QTableView):
 
         self.setShowGrid(False)
         self.setAlternatingRowColors(True)
-
         # self.setDragEnabled(True)
         # self.setDropIndicatorShown(True)
         # self.setDragDropOverwriteMode(False)
@@ -686,6 +691,7 @@ class ListViewDelegate(QStyledItemDelegate):
     def createEditor(self, parent: QWidget, option: QStyleOptionViewItem, index: QModelIndex):
 
         editor = ListView(parent)
+        editor.setObjectName('Editor')
         return editor
 
     def setEditorData(self, editor: QListWidget, index: QModelIndex):
@@ -719,6 +725,7 @@ class TextEditDelegate(QStyledItemDelegate):
 
     def createEditor(self, parent: QWidget, option: QStyleOptionViewItem, index: QModelIndex):
         editor = TextEdit(parent)
+        editor.setObjectName('Editor')
         editor.document().documentLayout().documentSizeChanged.connect(
             partial(self.sizeChangedEvent, index)
         )
@@ -764,7 +771,7 @@ class LineEditDelegate(QStyledItemDelegate):
 
     def createEditor(self, parent: QWidget, option: QStyleOptionViewItem, index: QModelIndex):
         editor = QLineEdit(parent)
-
+        editor.setObjectName('Editor')
         if self.items:
             completer = QCompleter()
             completer.setCaseSensitivity(Qt.CaseInsensitive)
