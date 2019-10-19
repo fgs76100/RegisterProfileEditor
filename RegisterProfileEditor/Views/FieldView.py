@@ -59,21 +59,38 @@ class FieldView(QWidget):
         self.create_ui()
 
     def show_reserved(self):
-        self.create_rows()
+        if self.is_reserve_show.checkState() == Qt.Checked:
+            for row in range(self.model.rowCount()):
+                for col in range(self.model.columnCount()):
+                    item = self.model.item(row, col)
+                    if item.data(Qt.UserRole) == 'reserved':
+                        item.setData('', Qt.UserRole)
+        else:
+            for row in range(self.model.rowCount()):
+                field = list(self.cols.keys()).index('Field')
+                item = self.model.item(row, field)
+                if item.text().lower() == 'reserved':
+                    for col in range(self.model.columnCount()):
+                        cell = self.model.item(row, col)
+                        cell.setData('reserved', Qt.UserRole)
 
     def dataBeforeChangedEvent(self, index: QModelIndex, new: str, old: str):
         if not index.isValid():
             return
         row = index.row()
         col = index.column()
-        cmd = DataChanged(
-            widget=self.model,
-            newtext=new,
-            oldtext=old,
-            index=index,
-            description=f'Table Data changed at ({row}, {col})'
-        )
-        self.undoStack.push(cmd)
+        selected_indexes = self.table.selectedIndexes()
+        for selected_index in selected_indexes:
+            if selected_index.column() != index.column():
+                continue
+            cmd = DataChanged(
+                widget=self.model,
+                newtext=new,
+                oldtext=selected_index.data(),
+                index=selected_index,
+                description=f'Table Data changed at ({row}, {col})'
+            )
+            self.undoStack.push(cmd)
 
     def chgRowHeight(self, index: QModelIndex, size: QSizeF):
         if not index.isValid():
@@ -176,7 +193,7 @@ class FieldView(QWidget):
     def tableFilter(self):
         text = self.entry.text().strip()
         self.keywordHighlight.emit(text)
-        self.table.matches = []
+        self.table.matches.clear()
         for row in range(self.model.rowCount()):
             self.table.hideRow(row)
         for col in range(self.model.columnCount()):
@@ -286,7 +303,11 @@ class FieldView(QWidget):
     def append_new(self):
         row = self.table.currentRow
         col = list(self.cols.keys()).index('LSB')
-        lsb = int(self.model.index(row, col).data()) - 1
+        index = self.model.index(row, col)
+        if not index.isValid():
+            lsb = 31
+        else:
+            lsb = int(index.data()) - 1
         if lsb < 0:
             lsb = 0
         new = {"MSB": lsb, "LSB": lsb}
@@ -308,7 +329,12 @@ class FieldView(QWidget):
     def prepend_new(self):
         row = self.table.currentRow
         col = list(self.cols.keys()).index('MSB')
-        msb = int(self.model.index(row, col).data()) + 1
+        index = self.model.index(row, col)
+        if not index.isValid():
+            msb = 31
+            row = 0
+        else:
+            msb = int(index.data()) + 1
         if msb > 31:
             msb = 31
         new = {"MSB": msb, "LSB": msb}
@@ -321,6 +347,8 @@ class FieldView(QWidget):
         if self.buffer is None:
             return
         row = self.table.currentRow
+        if row < 0:
+            row = 0
         for item in reversed(self.buffer):
             self.insertRow(
                 row,

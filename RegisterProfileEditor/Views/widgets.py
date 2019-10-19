@@ -11,7 +11,7 @@ import re
 from functools import partial
 from .CommandStack import ReplaceCommand
 import json
-from collections import OrderedDict
+from collections import OrderedDict, deque
 import os
 
 
@@ -103,7 +103,7 @@ class InfoDialog(QDialog):
         self.setWindowTitle(title)
         btn = QDialogButtonBox.Ok
         self.btnbox = QDialogButtonBox(btn, self)
-        self.btnbox.setHidden(True)
+        self.btnbox.setDisabled(True)
         self.plainText = QPlainTextEdit(self)
 
         vbox = QVBoxLayout()
@@ -121,7 +121,7 @@ class InfoDialog(QDialog):
         self.highlihgter()
 
     def progress_done(self):
-        self.btnbox.show()
+        self.btnbox.setDisabled(False)
 
     def highlihgter(self):
         highlight_rules = [
@@ -147,12 +147,12 @@ class InfoDialog(QDialog):
 
     def accept(self):
         self.plainText.setPlainText('')
-        self.btnbox.setHidden(True)
+        self.btnbox.setDisabled(True)
         super(InfoDialog, self).accept()
 
     def reject(self):
         self.plainText.setPlainText('')
-        self.btnbox.setHidden(True)
+        self.btnbox.setDisabled(True)
         super(InfoDialog, self).reject()
 
 
@@ -324,6 +324,7 @@ class ListView(QListWidget):
 
 
 class SearchAndReplace(QDialog):
+
     def __init__(self, parent=None):
         super(SearchAndReplace, self).__init__(parent)
         self.setWindowTitle('Search and Replace')
@@ -343,21 +344,23 @@ class SearchAndReplace(QDialog):
         vbox.addWidget(self.msg)
         self.textToSearch = QLineEdit(self)
         self.textToReplace = QLineEdit(self)
-        self.caseSensitive = QCheckBox(self)
+        self.caseSensitive = QCheckBox("Case Sensitive", self)
         self.caseSensitive.setCheckState(Qt.Checked)
-        self.regxp = QCheckBox(self)
+        self.regxp = QCheckBox('Match Exactly', self)
+        self.go_down = QCheckBox('Go Down', self)
+        # hbox_go_down = QHBoxLayout()
+        # hbox_go_down.addStretch(1)
+        # hbox_go_down.addWidget(self.go_down)
+
         checkbox_layout = QHBoxLayout()
         form = QFormLayout()
-        form.addRow(QLabel("Search for:"), self.textToSearch)
+        form.addRow(QLabel("Search for"), self.textToSearch)
         form.addRow(QLabel("Replace with"), self.textToReplace)
-        # form.addRow(self.caseSensitive, QLabel("CaseSensitive"))
-        checkbox_layout.addStretch(1)
-        checkbox_layout.addWidget(self.caseSensitive)
-        checkbox_layout.addWidget(QLabel("Case Sensitive"))
-        checkbox_layout.addWidget(self.regxp)
-        checkbox_layout.addWidget(QLabel('Match Exactly'))
+        form.addRow(
+            self.caseSensitive, self.regxp
+        )
+        form.addRow(QLabel(""), self.go_down)
         vbox.addLayout(form)
-        vbox.addLayout(checkbox_layout)
         vbox.addLayout(hbox)
         hbox_leave = QHBoxLayout()
         hbox_leave.addStretch(1)
@@ -409,7 +412,7 @@ class TableView(QTableView):
         self.setEditTriggers(
             QAbstractItemView.DoubleClicked
         )
-        self.matches = []
+        self.matches = deque()
         self.undoStack = QUndoStack()
         self.dialog = SearchAndReplace(self)
         self.dialog.nextBotton.clicked.connect(self.nextMatch)
@@ -418,15 +421,18 @@ class TableView(QTableView):
         self.dialog.textToSearch.textChanged.connect(self.resetMatches)
         self.dialog.repalceBotton.clicked.connect(self.replace)
         self.dialog.repalceAllButton.clicked.connect(self.replaceAll)
-        self.current_match = None
+        self.dialog.textToSearch.textChanged.connect(self.resetMatches)
+
+        self.current_col = 0
+        self.incr = 0
 
     @property
     def currentRow(self):
         return self.currentIndex().row()
 
     def resetMatches(self):
-        self.matches = []
-        self.current_match = None
+        self.matches.clear()
+        self.current_col = 0
 
     def setUndoStack(self, stack: QUndoStack):
         self.undoStack = stack
@@ -455,71 +461,91 @@ class TableView(QTableView):
         return True
 
     def focusInEvent(self, *args, **kwargs):
-        # if not self.model().hasChildren():
-        #     self.focusPreviousChild()
         if not self.selectedIndexes():
             self.selectRow(0)
-        # print(self.model())
-        # print()
         super(TableView, self).focusInEvent(*args, **kwargs)
 
-    def nextMatch(self):
-        if self.dialog.isVisible():
-            if self.current_match is not None:
-                self.matches.append(self.current_match)
+    def getPlaceHolder(self):
+        incr_pattern = re.compile(r'{([0-9]+)}')
+        textToReplace = self.dialog.textToReplace.text()
+        match = incr_pattern.search(textToReplace)
+        return match
+
+    def nextMatch(self, pop=False):
+        if not self.dialog.isVisible():
+            return
+        if not self.matches:
             textToSearch = self.dialog.textToSearch.text()
-            if textToSearch != '':
-                found = True
-                if not self.matches:
-                    found = self.searchTable(textToSearch)
-                if not found:
-                    return
-                # self.dialog.msg.setHidden(True)
-                self.current_match = self.matches.pop(0)
-                index = self.model().indexFromItem(self.current_match)
-                self.selectionModel().clearSelection()
-                self.setCurrentIndex(index)
+            found = self.searchTable(textToSearch)
+            if not found:
+                return
+            match = self.getPlaceHolder()
+            if match:
+                self.incr = int(match.group(1).strip())
+        else:
+            if self.dialog.go_down.checkState() == Qt.Unchecked:
+                self.matches.rotate(1)
+            else:
+                if not pop:
+                    self.matches.rotate(-1)
+        current_item = self.matches[0]
+        index = self.model().indexFromItem(current_item)
+        if index.column() != self.current_col:
+            self.current_col = index.column()
+            match = self.getPlaceHolder()
+            if match:
+                self.incr = int(match.group(1).strip())
+        self.selectionModel().clearSelection()
+        self.setCurrentIndex(index)
         self.raise_()
         self.activateWindow()
 
-    def replaceAll(self):
-        # self.nextMatch()
-        while True:
-            if self.replace():
-                break
-
     def replace(self):
-        if self.current_match is not None:
-            textToSearch = self.dialog.textToSearch.text()
-            textToReplace = self.dialog.textToReplace.text()
-            index = self.currentIndex()
-            model = self.model()
-            item = model.itemFromIndex(index)
-            old = item.text()
-            if self.dialog.caseSensitive.checkState() == Qt.Checked:
-                pattern = re.compile(textToSearch)
-            else:
-                pattern = re.compile(textToSearch, re.IGNORECASE)
-            new = pattern.sub(textToReplace, old)
-            self.undoStack.push(ReplaceCommand(
-                widget=self,
-                new=new,
-                old=old,
-                index=index,
-                description='table replace command'
-            ))
-            self.current_match = None
-            if not self.matches:
-                # found = self.searchTable(textToSearch)
-                # if not found:
-                self.dialog.raise_()
-                self.dialog.activateWindow()
-                return True
-            else:
-                self.nextMatch()
-        else:
+        if not self.dialog.isVisible():
+            return
+        if not self.matches:
             self.nextMatch()
-        return False
+            return
+        textToSearch = self.dialog.textToSearch.text()
+        textToReplace = self.dialog.textToReplace.text()
+        # incr_pattern = re.compile(r'{([0-9]+)}')
+        match = self.getPlaceHolder()
+        if match:
+            textToReplace = textToReplace.replace(match.group(0), str(self.incr))
+
+        index = self.currentIndex()
+        model = self.model()
+        item = model.itemFromIndex(index)
+        old = item.text()
+        if self.dialog.caseSensitive.checkState() == Qt.Checked:
+            pattern = re.compile(textToSearch)
+        else:
+            pattern = re.compile(textToSearch, re.IGNORECASE)
+        new = pattern.sub(textToReplace, old)
+        self.undoStack.push(ReplaceCommand(
+            widget=self,
+            new=new,
+            old=old,
+            index=index,
+            description='table replace command'
+        ))
+        self.matches.popleft()
+        self.incr += 1
+        if not self.matches:
+            # self.dialog.noMatchFound()
+            self.dialog.raise_()
+            self.dialog.activateWindow()
+            return
+        else:
+            self.nextMatch(pop=True)
+
+    def replaceAll(self):
+        if not self.matches:
+            self.nextMatch()
+        while True:
+            if not self.matches:
+                break
+            self.replace()
 
     def keyPressEvent(self, e: QKeyEvent):
         # table state
@@ -673,6 +699,14 @@ class TreeView(QTreeView):
             self.doubleClicked.emit(index)
             return
         super(TreeView, self).mouseDoubleClickEvent(event)
+
+    def focusInEvent(self, *args, **kwargs):
+        if not self.selectedIndexes():
+            index = self.model().index(0, 0)
+            if index.isValid():
+                self.setCurrentIndex(index)
+            return
+        super(TreeView, self).focusInEvent(*args, **kwargs)
 
     # def closeEditor(self, editor: QWidget, hint):
     #     if isinstance(editor, TextEdit):
