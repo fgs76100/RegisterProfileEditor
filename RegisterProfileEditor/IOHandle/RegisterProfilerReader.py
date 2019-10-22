@@ -74,9 +74,9 @@ class RegisterProfileReader(QObject):
                         if addr_offset is not None:
                             offset = addr_offset
 
-                    title = cells[0].strip().lower().capitalize()
-                    if title in self.info.keys():
-                        info[title] = cells[1]
+                    # title = cells[0].strip().lower().capitalize()
+                    # if title in self.info.keys():
+                    #     info[title] = cells[1]
 
                 if not read_en:
                     self.signal.emit('# [Warning] {} column headers failed to locate.'.format(sheet))
@@ -125,6 +125,7 @@ class RegisterProfileReader(QObject):
                     continue
                 else:
                     nrows = sheet.nrows
+                    info = self.info.copy()
                     for i in range(nrows):
                         cells = [x.value for x in sheet.row(i)]
                         if read_en:
@@ -166,7 +167,11 @@ class RegisterProfileReader(QObject):
                             continue
                         if cells[0].lower() == col_to_read[0].lower() and cells[1].lower() == col_to_read[1].lower():
                             read_en = True
+                            self.module_info[each_block] = info
                             continue
+                        title = cells[0].strip().lower().capitalize()
+                        if title in self.info.keys():
+                            info[title] = cells[1]
             if not read_en:
                 self.signal.emit('# [Warning] The column headers of the {0} failed to locate.'.format(each_block))
 
