@@ -53,18 +53,18 @@ register_columns = OrderedDict([
         # widget='textEdit',
         default=''
     )),
-    ('Loop', dict(
-        width=50,
-        default='1',
-        type='int',
-        minValue=1,
-        maxValue=100,
-    )),
-    ('Incr', dict(
-        width=50,
-        default='0x0',
-        type='hex'
-    )),
+    # ('Loop', dict(
+    #     width=50,
+    #     default='1',
+    #     type='int',
+    #     minValue=1,
+    #     maxValue=100,
+    # )),
+    # ('Incr', dict(
+    #     width=50,
+    #     default='0x0',
+    #     type='hex'
+    # )),
 ])
 
 block_columns = OrderedDict([
@@ -79,6 +79,7 @@ block_columns = OrderedDict([
     )),
     ('Description', dict(
         display=True,
+        widget='textEdit'
     )),
     ('Author', dict(
     )),
