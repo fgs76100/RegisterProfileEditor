@@ -128,11 +128,11 @@ class AnalyzerView(QWidget):
         chg_col = index_0.column()
         if chg_col < len(self.cols.keys()):
             return
-        if chg_row == 0:
-            item = self.model.itemFromIndex(index_0)
-            item.setText(new)
-            return
-        last_row = self.model.rowCount()-1
+        # if chg_row == 0:
+        #     item = self.model.itemFromIndex(index_0)
+        #     item.setText(new)
+        #     return
+        # last_row = self.model.rowCount()-1
         if chg_row != 0:
             item = self.model.item(0, chg_col)
             total = item.text().strip()
