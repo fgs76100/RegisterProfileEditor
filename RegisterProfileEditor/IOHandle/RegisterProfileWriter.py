@@ -82,7 +82,7 @@ class ProfileWriter:
             self.has_index = True
             self.index_sheet = self.workbook.add_sheet(sheetname='chip_index', cell_overwrite_ok=True)
             self.index_des = OrderedDict(
-                CHIP="",
+                CHIP=self.index_info.get('HEADPAGE', ''),
                 HEADPAGE=self.index_info.get('HEADPAGE', ''),
                 PREFIX=self.index_info.get('PREFIX', ''),
                 PPRANGE="0x100",
@@ -150,14 +150,14 @@ class ProfileWriter:
         mode_des = OrderedDict(
             DATA_MUX='Please provide the following information that will be shown in DATA_MUX Level',
             NAME=self.ip,
-            DESCRIPTION=self.block.get('Description'),
+            DESCRIPTION='',
             COMMENT='Comment of RTL code',
             REGNUM='',
-            AUTHOR=self.block.get('Author'),
+            AUTHOR='',
             DATE='',
-            VERSION=self.block.get('Version'),
+            VERSION='',
             ABSTRACT=self.base_addr,
-            HISTORY=self.block.get('Revisions'),
+            HISTORY='',
             REG_FILE=['File list of registers in DATA_MUX (*.xml)', self.file + '.xml'],
         )
         self.create_description(desr=mode_des, sheet=self.mod_sheet)
