@@ -23,7 +23,7 @@ class HTMLWriter(QRunnable):
         try:
             for block in self.blocks:
                 block_name = block.block_name
-                data[block_name] = []
+
                 block, success, msg = block.toDataFrame(expand=True)
 
                 if not success:
@@ -47,10 +47,11 @@ class HTMLWriter(QRunnable):
 
                 for index, df in block.items():
 
-                    all_public = df['Public'].drop_duplicates().tolist()
-                    if len(all_public) == 1:
-                        if all_public[0] == 'N':
-                            continue
+                    # all_public = df['Public'].drop_duplicates().tolist()
+                    # if len(all_public) == 1:
+                    #     if all_public[0] == 'N':
+                    #         continue
+                    data.setdefault(block_name, [])
                     df.MSB = df['MSB'].apply(int)
                     df.LSB = df['LSB'].apply(int)
                     for col, config in field_columns.items():
