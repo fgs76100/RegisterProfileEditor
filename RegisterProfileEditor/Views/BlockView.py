@@ -108,6 +108,9 @@ class BlockView(QWidget):
     def dataBeforeChangedEvent(self, index: QModelIndex, new: str, old: str):
         if not index.isValid():
             return
+        if index.data(Qt.UserRole) == 'block':
+            return
+        register = self.blocks[index.parent().row()].get_register(index.row())
         row = index.row()
         col = index.column()
         cmd = DataChanged(
@@ -115,7 +118,8 @@ class BlockView(QWidget):
             newtext=new,
             oldtext=old,
             index=index,
-            description=f'Table Data changed at ({row}, {col})'
+            description=f'Table Data changed at ({row}, {col})',
+            obj=register,
         )
         self.undoStack.push(cmd)
 
@@ -420,8 +424,9 @@ class BlockView(QWidget):
         if not items:
             return
         for row in sorted(items.keys(), reverse=True):
+            widget = items[row][0]
             cmd = TreeRemoveCommand(
-                widget=items[row][0],
+                widget=widget,
                 row=row,
                 description='remove',
                 block=items[row][1]
@@ -431,16 +436,16 @@ class BlockView(QWidget):
     def setFocus(self):
         self.tree.setFocus()
 
-    def saveChanges(self):
-        for row in range(self.model.rowCount()):
-            item = self.model.item(row, 0)
-            block = self.blocks[row]
-            if item.hasChildren():
-                for itemRow in range(item.rowCount()):
-                    register = block.get_register(itemRow)
-                    for col, header in enumerate(self.cols.keys()):
-                        child = item.child(itemRow, col)
-                        register[header] = child.text()
+    # def saveChanges(self):
+    #     for row in range(self.model.rowCount()):
+    #         item = self.model.item(row, 0)
+    #         block = self.blocks[row]
+    #         if item.hasChildren():
+    #             for itemRow in range(item.rowCount()):
+    #                 register = block.get_register(itemRow)
+    #                 for col, header in enumerate(self.cols.keys()):
+    #                     child = item.child(itemRow, col)
+    #                     register[header] = child.text()
 
     def clearSelection(self):
         self.tree.clearSelection()

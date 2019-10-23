@@ -227,7 +227,7 @@ class App(QMainWindow):
     def loadFiles(self, filenames):
         if filenames:
             self.info.show()
-            self.tree.saveChanges()
+            # self.tree.saveChanges()
         try:
             for filename in filenames:
                 if filename.endswith('.xlsx') or filename.endswith('.xls'):
@@ -341,7 +341,7 @@ class App(QMainWindow):
             self.tree.clearSelection()
             self.is_write = True
             self.info.show()
-            self.tree.saveChanges()
+            # self.tree.saveChanges()
             if not self.data['blocks']:
                 self.info.upload_text(
                     "# [Warning] There is no module exist."
@@ -450,7 +450,7 @@ class App(QMainWindow):
             return
         self.is_write = True
         self.info.show()
-        self.tree.saveChanges()
+        # self.tree.saveChanges()
         path = os.path.abspath(os.path.dirname(__file__))
         template = os.path.join(path, 'templates/template.html')
 
