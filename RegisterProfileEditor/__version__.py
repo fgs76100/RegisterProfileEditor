@@ -1,6 +1,6 @@
 # __version__.py
 
-__version__ = '0.1.2'
+__version__ = '0.1.3'
 
 
 # Revisions
@@ -11,7 +11,7 @@ __version__ = '0.1.2'
 #       // 2. RegisterProfileReader now parsing correct information
 #       // 3. remove some useless information in RegisterProfileWriter
 #       // 4. remove current useless column in register column
-
+# 0.1.3 fix BlockView copy bug
 
 
 
