@@ -303,7 +303,8 @@ class TextEdit(QTextEdit):
                 self.focusPreviousChild()
                 self.focusNextChild()
                 return
-        super(TextEdit, self).keyPressEvent(event)
+        else:
+            super(TextEdit, self).keyPressEvent(event)
 
     def text(self):
         return self.toPlainText()
