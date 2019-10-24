@@ -1,6 +1,6 @@
 # __version__.py
 
-__version__ = '0.1.3'
+__version__ = '0.1.4'
 
 
 # Revisions
@@ -12,6 +12,8 @@ __version__ = '0.1.3'
 #       // 3. remove some useless information in RegisterProfileWriter
 #       // 4. remove current useless column in register column
 # 0.1.3 fix BlockView copy bug
+# 0.1.4 // 1. fix HTMLWriter info bug
+#       // 2. fix textEdit shifte bug
 
 
 
