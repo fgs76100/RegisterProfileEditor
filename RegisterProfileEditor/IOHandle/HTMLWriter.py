@@ -82,7 +82,7 @@ class HTMLWriter(QRunnable):
             with open(self.filename, 'w') as f:
                 f.write(template)
             self.signal.progress.emit(
-                f'# [Info] Create {self.filename} successfully.\n'
+                f'# [INFO] Create {self.filename} successfully.\n'
             )
         except Exception as e:
             self.signal.progress.emit(
