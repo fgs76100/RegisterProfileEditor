@@ -972,7 +972,14 @@ class LineEdit(QLineEdit):
 
 class InputDialog(QDialog):
 
-    def __init__(self, title: str, inputs: dict, parent=None, values: dict=None, label=None):
+    def __init__(self,
+                 title: str,
+                 inputs: dict,
+                 parent=None,
+                 values: dict = None,
+                 label=None,
+                 resize: list = None
+                 ):
         super(InputDialog, self).__init__(parent)
         self.setWindowTitle(title)
         btn = QDialogButtonBox.Save | QDialogButtonBox.Cancel
@@ -980,7 +987,8 @@ class InputDialog(QDialog):
         layout = QFormLayout()
 
         self.widgets = OrderedDict()
-        self.resize(600, 400)
+        if resize:
+            self.resize(*resize)
         if values is None:
             values = {}
         for key, config in inputs.items():

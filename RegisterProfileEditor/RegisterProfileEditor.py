@@ -281,7 +281,8 @@ class App(QMainWindow):
     def newModule(self):
         new = InputDialog(
             title="New Module", parent=self, inputs=block_columns,
-            label="Module Information"
+            label="Module Information",
+            resize=[600, 400]
         )
         info, yes = new.get()
         if yes:
@@ -369,7 +370,8 @@ class App(QMainWindow):
                             "AUTHOR": {},
                             "DESCRIPTION": {}
                         },
-                        label='Press Cancel to save without chip_index'
+                        label='Press Cancel to save without chip_index',
+                        resize=[600, 400]
                     )
                     index_info, yes = dialog.get()
                     if not yes:
