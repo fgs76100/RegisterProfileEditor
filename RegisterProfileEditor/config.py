@@ -247,7 +247,7 @@ field_columns = OrderedDict([
     ("Access", dict(
         width=80,
         # widget='list',
-        items=['RW', 'RO', 'RW1AC'],
+        items=['RW', 'RO', 'RWAC'],
         require=True,
     )),
     ("Default", dict(
