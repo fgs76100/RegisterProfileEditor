@@ -60,8 +60,8 @@ class TableInsertCommand(QUndoCommand):
 
 class DataChanged(QUndoCommand):
     def __init__(self,
-                 widget: QStandardItemModel, newtext: str, oldtext: str,
-                 index: QModelIndex, description: str, obj = None
+                 widget: QStandardItemModel, newtext: str, oldtext: [str],
+                 index: [QModelIndex], description: str, obj=None
                  ):
         super(DataChanged, self).__init__(description)
         self.widget = widget
@@ -71,14 +71,16 @@ class DataChanged(QUndoCommand):
         self.obj = obj
 
     def redo(self):
-        self.widget.itemFromIndex(self.index).setText(self.newText)
-        if self.obj:
-            self.obj[self.widget.horizontalHeaderItem(self.index.column()).text()] = self.newText
+        for each_index in self.index:
+            self.widget.itemFromIndex(each_index).setText(self.newText)
+            if self.obj:
+                self.obj[self.widget.horizontalHeaderItem(each_index.column()).text()] = self.newText
 
     def undo(self):
-        self.widget.itemFromIndex(self.index).setText(self.oldText)
-        if self.obj:
-            self.obj[self.widget.horizontalHeaderItem(self.index.column()).text()] = self.oldText
+        for each_index, oldText in zip(self.index, self.oldText):
+            self.widget.itemFromIndex(each_index).setText(oldText)
+            if self.obj:
+                self.obj[self.widget.horizontalHeaderItem(each_index.column()).text()] = oldText
 
 
 class TreeRemoveCommand(QUndoCommand):

@@ -116,8 +116,8 @@ class BlockView(QWidget):
         cmd = DataChanged(
             widget=self.model,
             newtext=new,
-            oldtext=old,
-            index=index,
+            oldtext=[old],
+            index=[index],
             description=f'Table Data changed at ({row}, {col})',
             obj=register,
         )
