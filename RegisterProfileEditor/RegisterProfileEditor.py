@@ -116,16 +116,16 @@ class App(QMainWindow):
             self.tree.blockSignals(False)
 
             if self.table.checkTableChanged():
-                yes = MessageBox.askyesno(
-                    self, GUI_NAME,
-                    f'{self.table.caption.text()}\n'
-                    f'The Table had been modified\n'
-                    'Do you want to save changes?'
-                )
+                # yes = MessageBox.askyesno(
+                #     self, GUI_NAME,
+                #     f'{self.table.caption.text()}\n'
+                #     f'The Table had been modified\n'
+                #     'Do you want to save changes?'
+                # )
 
-                if yes:
-                    self.table.saveTable()
-                    self.backUpFile()
+                # if yes:
+                self.table.saveTable()
+                self.backUpFile()
 
             register = self.data['blocks'][block_index].get_register(row)
             if register is None:
