@@ -19,7 +19,7 @@ new_field = dict(
 )
 
 new_reg = dict(
-    Offset='0x',
+    Offset='0x0',
     Name='New',
     Description="",
     Loop="1",
@@ -142,6 +142,12 @@ register_contextmenu = [
         shortcut='Ctrl+D',
         action='remove',
         icon='fa.trash-o'
+    ),
+    dict(
+        label='Shift by',
+        shortcut='Shift+S',
+        action='shiftBy',
+        icon='fa.arrows-v'
     )
 ]
 

@@ -7,7 +7,7 @@ from PyQt5.QtGui import QContextMenuEvent, QStandardItemModel, QStandardItem
 import re
 from .widgets import TreeView, LineEditDelegate, MessageBox
 from .widgets import ListViewDelegate, TextEditDelegate, InputDialog
-from .CommandStack import TreeInsertCommand, TreeRemoveCommand
+from .CommandStack import TreeInsertCommand, TreeRemoveCommand, TreeShiftCommand
 from .CommandStack import DataChanged
 from RegisterProfileEditor.config import register_contextmenu, new_reg, GUI_NAME, caption_formatter, block_columns
 from .BaseClass import Block, Register
@@ -279,6 +279,10 @@ class BlockView(QWidget):
                 row+1,
                 [new],
             )
+            self.tree.clearSelection()
+            self.tree.setCurrentIndex(
+                index.sibling(row+1, 0)
+            )
         except ValueError:
             MessageBox.showError(
                 self,
@@ -304,6 +308,10 @@ class BlockView(QWidget):
             self.insert_row(
                 row,
                 [new],
+            )
+            self.tree.clearSelection()
+            self.tree.setCurrentIndex(
+                index.sibling(row, 0)
             )
         except ValueError:
             MessageBox.showError(
@@ -395,7 +403,8 @@ class BlockView(QWidget):
                 title=GUI_NAME,
                 inputs=block_columns,
                 values=block,
-                label='Module Information'
+                label='Module Information',
+                resize=[600, 400]
             )
             info, save = dialog.get()
             if save:
@@ -461,5 +470,35 @@ class BlockView(QWidget):
         address, _ = self.blocks[block_index].get_address_space(index.row())
         self.addAnalyzerTrigger.emit(address)
 
+    def shiftBy(self):
+        dialog = InputDialog(
+            title=GUI_NAME,
+            parent=self,
+            label='You can use negative value. For example: -0x4, -8',
+            inputs={
+                "shift by": {},
+            }
+        )
+        values, save = dialog.get()
+        if not save:
+            return
+        # print(values)
+        rows = {}
+        for row, index in self.iterItemPerSelectedRow():
+            item = self.model.itemFromIndex(index)
+            if item.data(Qt.UserRole) == 'block':
+                continue
+            rows[row] = item
+        index = self.tree.currentIndex().parent()
+        if index.data(Qt.UserRole) != 'block':
+            return
+        cmd = TreeShiftCommand(
+            rows=rows,
+            registers=self.blocks[index.row()].registers,
+            description='register shift',
+            value=values.get('shift by', '0x0')
+
+        )
+        self.undoStack.push(cmd)
 
 

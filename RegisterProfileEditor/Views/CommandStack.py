@@ -113,29 +113,36 @@ class TreeInsertCommand(QUndoCommand):
         self.block = block
         self.cols = cols
         self.is_root = is_root
+        self.widget_item = None
 
     def redo(self):
         if not self.is_root:
-            self.widget.insertRow(
-                self.row,
-                [
-                    QStandardItem(
-                        self.items.get(col)
-                    ) for col in self.cols.keys()
-                ]
-            )
-        else:
-            self.items.setDisplayItem()
-            root = self.items.getDisplayItem()
-            for register in self.items:
-                root[0].appendRow(
+            if self.widget_item is None:
+                self.widget.insertRow(
+                    self.row,
                     [
                         QStandardItem(
-                            register.get(col)
+                            self.items.get(col)
                         ) for col in self.cols.keys()
                     ]
                 )
-            self.widget.insertRow(self.row, root)
+            else:
+                self.widget.insertRow(self.row, self.widget_item)
+        else:
+            if self.widget_item is None:
+                self.items.setDisplayItem()
+                root = self.items.getDisplayItem()
+                for register in self.items:
+                    root[0].appendRow(
+                        [
+                            QStandardItem(
+                                register.get(col)
+                            ) for col in self.cols.keys()
+                        ]
+                    )
+                self.widget.insertRow(self.row, root)
+            else:
+                self.widget.insertRow(self.row, self.widget_item)
 
         self.block.insert(
             self.row,
@@ -143,8 +150,29 @@ class TreeInsertCommand(QUndoCommand):
         )
 
     def undo(self):
-        self.widget.removeRow(self.row)
-        del self.block[self.row]
+        self.widget_item = self.widget.takeRow(self.row)
+        self.block.pop(self.row)
+
+
+class TreeShiftCommand(QUndoCommand):
+
+    def __init__(self, rows: dict, registers, description:str, value: str):
+        super(TreeShiftCommand, self).__init__(description)
+        self.rows = rows
+        self.registers = registers
+        self.value = value
+
+    def redo(self):
+        for row, item in self.rows.items():
+            offset = self.registers[row].shift(self.value)
+            if offset:
+                item.setText(offset)
+
+    def undo(self):
+        for row, item in self.rows.items():
+            offset = self.registers[row].shift("-"+self.value)
+            if offset:
+                item.setText(offset)
 
 
 # class TreeDataChanged(QUndoCommand):

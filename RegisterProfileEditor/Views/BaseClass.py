@@ -78,10 +78,20 @@ class Register:
                             text = 'RESERVED'
                 field[key] = str(text).strip()
 
-
     def inti_register(self):
         for col, config in register_columns.items():
             self._register[col] = config.get('default', '')
+
+    def shift(self, value: str) -> str:
+        offset = self.offset
+        value = value.lower()
+        try:
+            offset = int(offset, 16) + int(value, 16)
+            offset = "0x{0:0{len}X}".format(offset, len=offset_length)
+            self._register['Offset'] = offset
+            return offset
+        except Exception as e:
+            return ''
 
     @property
     def loop(self):
