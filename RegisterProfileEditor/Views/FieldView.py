@@ -56,6 +56,9 @@ class FieldView(QWidget):
 
         self.entry.textChanged.connect(self.tableFilter)
         self.is_reserve_show.stateChanged.connect(self.show_reserved)
+        self.table.deleteKeyPress.connect(
+            self.dataBeforeChangedEvent
+        )
         self.create_ui()
 
     def show_reserved(self):
@@ -80,17 +83,21 @@ class FieldView(QWidget):
         row = index.row()
         col = index.column()
         selected_indexes = self.table.selectedIndexes()
+        indexes = []
+        oldText = []
         for selected_index in selected_indexes:
             if selected_index.column() != index.column():
                 continue
-            cmd = DataChanged(
-                widget=self.model,
-                newtext=new,
-                oldtext=selected_index.data(),
-                index=selected_index,
-                description=f'Table Data changed at ({row}, {col})'
-            )
-            self.undoStack.push(cmd)
+            indexes.append(selected_index)
+            oldText.append(selected_index.data())
+        cmd = DataChanged(
+            widget=self.model,
+            newtext=new,
+            oldtext=oldText,
+            index=indexes,
+            description=f'Table Data changed at ({row}, {col})'
+        )
+        self.undoStack.push(cmd)
 
     def chgRowHeight(self, index: QModelIndex, size: QSizeF):
         if not index.isValid():

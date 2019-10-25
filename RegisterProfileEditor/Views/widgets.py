@@ -391,6 +391,9 @@ class SearchAndReplace(QDialog):
 
 
 class TableView(QTableView):
+
+    deleteKeyPress = pyqtSignal(QModelIndex, str, str)
+
     def __init__(self, parent):
         super(TableView, self).__init__(parent=parent)
 
@@ -587,6 +590,8 @@ class TableView(QTableView):
                     sibling = index.sibling(0, index.column())
                 self.setCurrentIndex(sibling)
                 return
+            if key == Qt.Key_Delete or key == Qt.Key_D:
+                self.deleteKeyPress.emit(self.currentIndex(), '', '')
 
         pre_index = index
 
