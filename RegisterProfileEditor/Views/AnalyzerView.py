@@ -1,5 +1,5 @@
 from PyQt5.QtWidgets import QWidget, QLineEdit, QCompleter, QPushButton, QHBoxLayout, QVBoxLayout, QCheckBox
-from PyQt5.QtWidgets import QScrollArea, QMenu, QHeaderView
+from PyQt5.QtWidgets import QScrollArea, QMenu, QHeaderView, QAbstractScrollArea
 from PyQt5.QtCore import Qt, QStringListModel, QModelIndex, pyqtSignal
 from PyQt5.QtGui import QStandardItem, QStandardItemModel, QFont, QColor, QContextMenuEvent
 from .widgets import LineEditDelegate, TableView, TextEditDelegate
@@ -48,7 +48,6 @@ class MetaHeaderView(QHeaderView):
         self.line.setFocus()
         self.line.selectAll()
         self.sectionedit = section
-
 
 
 class AnalyzerView(QWidget):
@@ -105,7 +104,9 @@ class AnalyzerView(QWidget):
         # self.table.horizontalHeader().setHidden(True)
         self.table.verticalHeader().setHidden(True)
         self.table.setShowGrid(False)
-
+        self.table.setSizeAdjustPolicy(
+            QAbstractScrollArea.AdjustToContents
+        )
         # self.table.setMinimumHeight(600)
         self.reserved_row = []
         self.add_col.clicked.connect(self.add_column)
@@ -199,9 +200,9 @@ class AnalyzerView(QWidget):
             for _ in range(2):
                 self.add_column()
             self.hide_reserved()
-            self.table.setMinimumHeight(
-                (self.model.rowCount()+1)*self.table.rowHeight(0)+10
-            )
+            # self.table.setMinimumHeight(
+            #     (self.model.rowCount()+1)*self.table.rowHeight(0)+10
+            # )
             self.add_col.setDisabled(False)
 
     def hide_reserved(self):
@@ -259,10 +260,12 @@ class AnalyzerView(QWidget):
             if width:
                 self.table.setColumnWidth(col, width)
             # self.table.resizeColumnToContents(col)
-
+        height = 0
         for row in range(self.model.rowCount()):
             self.table.resizeRowToContents(row)
-        # self.table.setMinimumHeight(self.table.size().height())
+            height += self.table.rowHeight(row)
+        self.table.setMinimumHeight(height+30)
+        # print(self.table.heightMM(), self.table.height())
 
     def reload_address(self, address_space: dict):
         self.address_space = address_space
