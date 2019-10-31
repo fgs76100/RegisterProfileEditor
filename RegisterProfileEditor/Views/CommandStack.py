@@ -1,4 +1,4 @@
-from PyQt5.QtWidgets import QUndoCommand, QTableView
+from PyQt5.QtWidgets import QUndoCommand, QTableView, QHeaderView
 from PyQt5.QtGui import QStandardItem, QStandardItemModel
 from PyQt5.QtCore import QModelIndex, Qt
 import traceback
@@ -7,46 +7,60 @@ import sys
 
 class TableRemoveCommand(QUndoCommand):
     
-    def __init__(self, widget: QTableView, items: {int: [QStandardItem]}, description: str,):
+    def __init__(self, widget: QTableView, items: {int: [QStandardItem]}, description: str, obj: list):
         super(TableRemoveCommand, self).__init__(description)
         self.widget = widget
         self.items = items
+        self.obj = obj
 
     def redo(self):
         last_row = int
         for row in sorted(self.items.keys(), reverse=True):
             self.widget.model().takeRow(row)
             last_row = row
+            self.obj.pop(row)
         self.widget.selectRow(last_row)
 
     def undo(self):
         last_row = int
+        model = self.widget.model()
         for row, items in self.items.items():
             # item = self.items[len(self.rows)-row-1]
-            self.widget.model().insertRow(
+            model.insertRow(
                 row,
                 [QStandardItem(item) for item in items]
             )
             self.widget.resizeRowToContents(row)
+            field = {}
+            for col in range(model.columnCount()):
+                field[model.horizontalHeaderItem(col).text()] = items[col]
+            self.obj.insert(row, field)
             last_row = row
+
         self.widget.selectRow(last_row)
 
 
 class TableInsertCommand(QUndoCommand):
 
-    def __init__(self, widget: QTableView, row: int, items: [QStandardItem], description: str):
+    def __init__(self, widget: QTableView, row: int, items: [QStandardItem], description: str, obj: list):
         super(TableInsertCommand, self).__init__(description)
         self.widget = widget
         self.items = items
         self.row = row
+        self.obj = obj
 
     def redo(self):
-
+        model = self.widget.model()
         try:
-            self.widget.model().insertRow(
+            model.insertRow(
                 self.row,
                 [QStandardItem(item) for item in self.items]
             )
+            field = {}
+            for col in range(model.columnCount()):
+                field[model.horizontalHeaderItem(col).text()] = self.items[col]
+            self.obj.insert(self.row, field)
+
         except TypeError:
             traceback.print_exc(file=sys.stdout)
             print([item.text() for item in self.items])
@@ -56,6 +70,7 @@ class TableInsertCommand(QUndoCommand):
 
     def undo(self):
         self.widget.model().removeRow(self.row)
+        self.obj.pop(self.row)
 
 
 class DataChanged(QUndoCommand):
@@ -158,7 +173,7 @@ class TreeInsertCommand(QUndoCommand):
 
 class TreeShiftCommand(QUndoCommand):
 
-    def __init__(self, rows: dict, registers, description:str, value: str):
+    def __init__(self, rows: dict, registers, description: str, value: str):
         super(TreeShiftCommand, self).__init__(description)
         self.rows = rows
         self.registers = registers
@@ -171,8 +186,12 @@ class TreeShiftCommand(QUndoCommand):
                 item.setText(offset)
 
     def undo(self):
+        if self.value.startswith('-'):
+            value = self.value.replace('-', '')
+        else:
+            value = '-' + self.value
         for row, item in self.rows.items():
-            offset = self.registers[row].shift("-"+self.value)
+            offset = self.registers[row].shift(value)
             if offset:
                 item.setText(offset)
 
