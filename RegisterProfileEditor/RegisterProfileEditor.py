@@ -261,7 +261,6 @@ class App(QMainWindow):
             if not self.is_write:
                 self.get_address_space()
                 self.create_tree()
-                self.reload_address.emit(self.address_space)
             else:
                 self.remove_backup()
             self.is_write = False
@@ -403,6 +402,7 @@ class App(QMainWindow):
                         f"# [Warning] The address {address_space} is duplicated."
                     )
                 self.address_space[address_space] = fields
+        self.reload_address.emit(self.address_space)
 
     def remove_backup(self):
         if os.path.exists(self.backup_file):

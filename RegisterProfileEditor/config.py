@@ -356,6 +356,16 @@ menubar_configs = [
         ]
     },
     {
+        "Analyzer": [
+            dict(
+                text='Reload Address',
+                # shortcut=None,
+                action='get_address_space',
+                icon='fa.refresh'
+            ),
+        ]
+    },
+    {
         "About": [
             dict(
                 text=f"Version: {__version__}",
