@@ -91,6 +91,7 @@ class Register:
             self._register['Offset'] = offset
             return offset
         except Exception as e:
+            print('Error', value, offset)
             return ''
 
     @property

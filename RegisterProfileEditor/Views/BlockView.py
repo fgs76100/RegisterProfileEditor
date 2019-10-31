@@ -496,7 +496,7 @@ class BlockView(QWidget):
             rows=rows,
             registers=self.blocks[index.row()].registers,
             description='register shift',
-            value=values.get('shift by', '0x0')
+            value=values.get('shift by', '0x0').strip()
 
         )
         self.undoStack.push(cmd)
