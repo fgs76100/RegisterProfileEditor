@@ -202,12 +202,12 @@ field_contextmenu = [
         action='cut',
         icon='fa.scissors'
     ),
-    dict(
-        label='Save Table',
-        shortcut='Ctrl+S',
-        action='saveTable',
-        icon='fa.floppy-o'
-    ),
+    # dict(
+    #     label='Save Table',
+    #     shortcut='Ctrl+S',
+    #     action='saveTable',
+    #     icon='fa.floppy-o'
+    # ),
     dict(
         label='Remove',
         shortcut='Ctrl+D',

@@ -592,6 +592,7 @@ class TableView(QTableView):
                 return
             if key == Qt.Key_Delete or key == Qt.Key_D:
                 self.deleteKeyPress.emit(self.currentIndex(), '', '')
+                return
 
         pre_index = index
 

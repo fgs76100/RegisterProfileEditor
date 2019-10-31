@@ -90,10 +90,11 @@ class App(QMainWindow):
             if filename:
                 self.loadFiles([filename])
 
-        self.table.tableSaved.connect(self.backUpFile)
+        # self.table.tableSaved.connect(self.backUpFile)
         self.tree.addAnalyzerTrigger.connect(
             self.analyzer.add_analyzer
         )
+        self.undoStack.indexChanged.connect(self.backUpFile)
 
     def create_ui(self):
         self.resize(1200, 600)
@@ -114,18 +115,6 @@ class App(QMainWindow):
             # print(row)
             self.undoStack.clear()
             self.tree.blockSignals(False)
-
-            if self.table.checkTableChanged():
-                # yes = MessageBox.askyesno(
-                #     self, GUI_NAME,
-                #     f'{self.table.caption.text()}\n'
-                #     f'The Table had been modified\n'
-                #     'Do you want to save changes?'
-                # )
-
-                # if yes:
-                self.table.saveTable()
-                self.backUpFile()
 
             register = self.data['blocks'][block_index].get_register(row)
             if register is None:
@@ -194,12 +183,15 @@ class App(QMainWindow):
         if isinstance(self.focusWidget(), QTreeView):
             self.treeUndoStack.undo()
         else:
+            # table view
             self.undoStack.undo()
+            # self.undoStack.undo
 
     def redo(self):
         if isinstance(self.focusWidget(), QTreeView):
             self.treeUndoStack.redo()
         else:
+            # table view
             self.undoStack.redo()
 
     def selectFont(self):
@@ -427,7 +419,7 @@ class App(QMainWindow):
             )
         return yes
 
-    def backUpFile(self):
+    def backUpFile(self, index=None):
         thread = BackUpFile(blocks=self.data['blocks'], filename=self.backup_file)
         self.threadpool.start(thread)
 
@@ -475,6 +467,7 @@ class App(QMainWindow):
         # importlib.reload(darkmode)
         # self.setStyleSheet(darkmode.style)
         pass
+
 
 
 def trap_exc_during_debug(*args):

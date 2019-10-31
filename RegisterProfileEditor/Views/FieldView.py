@@ -14,7 +14,7 @@ import qtawesome as qta
 class FieldView(QWidget):
 
     keywordHighlight = pyqtSignal(str)
-    tableSaved = pyqtSignal()
+    # tabledChanged = pyqtSignal()
 
     def __init__(self, cols: dict, items: [dict], parent=None, undoStack=None):
 
@@ -95,7 +95,8 @@ class FieldView(QWidget):
             newtext=new,
             oldtext=oldText,
             index=indexes,
-            description=f'Table Data changed at ({row}, {col})'
+            description=f'Table Data changed at ({row}, {col})',
+            obj=self.items[row]
         )
         self.undoStack.push(cmd)
 
@@ -277,7 +278,8 @@ class FieldView(QWidget):
         cmd = TableRemoveCommand(
             description='remove command',
             widget=self.table,
-            items=items
+            items=items,
+            obj=self.items
         )
         # self.table.selectRow(rows[-1])
         self.undoStack.push(cmd)
@@ -303,7 +305,8 @@ class FieldView(QWidget):
             description='Insert table',
             items=[
                 str(item.get(col, config.get('default', ''))) for col, config in self.cols.items()
-            ]
+            ],
+            obj=self.items
         )
         self.undoStack.push(cmd)
 
@@ -417,23 +420,23 @@ class FieldView(QWidget):
                 reserves[row]
             )
 
-    def saveTable(self):
+    # def saveTable(self):
+    #
+    #     self.items.clear()
+    #     for row, values in self.iterRowValues():
+    #         self.items.append(values)
+    #     self.tableSaved.emit()
 
-        self.items.clear()
-        for row, values in self.iterRowValues():
-            self.items.append(values)
-        self.tableSaved.emit()
-
-    def checkTableChanged(self):
-        if len(self.items) != self.model.rowCount():
-            return True
-        else:
-            for row, values in self.iterRowValues():
-                old = self.items[row]
-                if old != values:
-                    return True
-            else:
-                return False
+    # def checkTableChanged(self):
+    #     if len(self.items) != self.model.rowCount():
+    #         return True
+    #     else:
+    #         for row, values in self.iterRowValues():
+    #             old = self.items[row]
+    #             if old != values:
+    #                 return True
+    #         else:
+    #             return False
 
     def setFocus(self, r=None):
         self.table.setFocus()
