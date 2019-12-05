@@ -1,6 +1,6 @@
 # __version__.py
 
-__version__ = '0.2.1'
+__version__ = '0.2.2'
 
 
 # Revisions
@@ -23,5 +23,7 @@ __version__ = '0.2.1'
 #       // 2. fix BlockView shiftBy bug
 #       // 3. resize AnalyzerView table when more detail clicked
 #       // 4. add analyzer menu to reload address
+#
+# 0.2.2 // 1. fix multi-selection value change bug
 
 
