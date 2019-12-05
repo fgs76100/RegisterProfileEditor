@@ -96,7 +96,7 @@ class FieldView(QWidget):
             oldtext=oldText,
             index=indexes,
             description=f'Table Data changed at ({row}, {col})',
-            obj=self.items[row]
+            obj=self.items
         )
         self.undoStack.push(cmd)
 

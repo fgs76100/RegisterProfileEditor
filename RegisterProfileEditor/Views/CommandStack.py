@@ -89,13 +89,15 @@ class DataChanged(QUndoCommand):
         for each_index in self.index:
             self.widget.itemFromIndex(each_index).setText(self.newText)
             if self.obj:
-                self.obj[self.widget.horizontalHeaderItem(each_index.column()).text()] = self.newText
+                obj = self.obj[each_index.row()]
+                obj[self.widget.horizontalHeaderItem(each_index.column()).text()] = self.newText
 
     def undo(self):
         for each_index, oldText in zip(self.index, self.oldText):
             self.widget.itemFromIndex(each_index).setText(oldText)
             if self.obj:
-                self.obj[self.widget.horizontalHeaderItem(each_index.column()).text()] = oldText
+                obj = self.obj[each_index.row()]
+                obj[self.widget.horizontalHeaderItem(each_index.column()).text()] = oldText
 
 
 class TreeRemoveCommand(QUndoCommand):
