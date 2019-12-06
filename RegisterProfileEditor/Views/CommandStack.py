@@ -1,6 +1,7 @@
 from PyQt5.QtWidgets import QUndoCommand, QTableView, QHeaderView
 from PyQt5.QtGui import QStandardItem, QStandardItemModel
 from PyQt5.QtCore import QModelIndex, Qt
+from .BaseClass import Register
 import traceback
 import sys
 
@@ -89,14 +90,20 @@ class DataChanged(QUndoCommand):
         for each_index in self.index:
             self.widget.itemFromIndex(each_index).setText(self.newText)
             if self.obj:
-                obj = self.obj[each_index.row()]
+                if not isinstance(self.obj, Register):
+                    obj = self.obj[each_index.row()]
+                else:
+                    obj = self.obj
                 obj[self.widget.horizontalHeaderItem(each_index.column()).text()] = self.newText
 
     def undo(self):
         for each_index, oldText in zip(self.index, self.oldText):
             self.widget.itemFromIndex(each_index).setText(oldText)
             if self.obj:
-                obj = self.obj[each_index.row()]
+                if not isinstance(self.obj, Register):
+                    obj = self.obj[each_index.row()]
+                else:
+                    obj = self.obj
                 obj[self.widget.horizontalHeaderItem(each_index.column()).text()] = oldText
 
 

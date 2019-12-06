@@ -28,5 +28,6 @@ __version__ = '0.2.3'
 #
 # 0.2.3 // 1. add utf-8 encoding to json parser
 #       // 2. add error handling to FieldView linting
+#       // 3. fix dataChange bug in CommnadStack
 
 
