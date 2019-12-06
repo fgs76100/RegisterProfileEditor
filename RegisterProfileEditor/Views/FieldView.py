@@ -372,31 +372,34 @@ class FieldView(QWidget):
         success = False
         msb = int(self.cols.get('MSB').get('maxValue', 31))
         run = None
-        for row, values in self.iterRowValues():
-            row += 1
-            run = row
-            for header, config in self.cols.items():
-                require = config.get('require', True)
-                value = values.get(header, '')
-                if require:
-                    if value == '':
-                        msg = f'Value Error at Row: {row}, column: {header}\n' \
-                              f'This entry cannot be empty'
-                        success = False
-                        break
-                if header == "MSB":
-                    value = int(value)
-                    lsb = int(values.get('LSB', msb))
-                    success = (value == msb) & (msb >= lsb)
-                    msb = lsb - 1
-                    if self.model.rowCount() == row and success:
-                        success = lsb == int(self.cols.get('LSB').get('minValue', 0))
-                    if not success:
-                        msg = f'Index Error at Row: {row}\n' \
-                              f'Please Check MSB or LSB value'
-                        break
-            if not success:
-                break
+        try:
+            for row, values in self.iterRowValues():
+                row += 1
+                run = row
+                for header, config in self.cols.items():
+                    require = config.get('require', True)
+                    value = values.get(header, '')
+                    if require:
+                        if value == '':
+                            msg = f'Value Error at Row: {row}, column: {header}\n' \
+                                f'This entry cannot be empty'
+                            success = False
+                            break
+                    if header == "MSB":
+                        value = int(value)
+                        lsb = int(values.get('LSB', msb))
+                        success = (value == msb) & (msb >= lsb)
+                        msb = lsb - 1
+                        if self.model.rowCount() == row and success:
+                            success = lsb == int(self.cols.get('LSB').get('minValue', 0))
+                        if not success:
+                            msg = f'Index Error at Row: {row}\n' \
+                                f'Please Check MSB or LSB value'
+                            break
+                if not success:
+                    break
+        except Exception as e:
+            return False, f"Something went wrong when handle Row: {row}\nError message: {str(e)}"
         if run is None:
             msg = 'Fields cannot be empty.\n'
         return success, msg
