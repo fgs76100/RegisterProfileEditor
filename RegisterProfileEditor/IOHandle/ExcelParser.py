@@ -98,7 +98,7 @@ class JsonLoad(QRunnable):
     def run(self):
         filename = self.filename.split("/")[-1]
         try:
-            with open(self.filename, 'r') as f:
+            with open(self.filename, 'r', encoding='utf-8') as f:
                 data = json.load(f)
                 if isinstance(data, list):
                     for block in data:

@@ -21,7 +21,7 @@ class JsonWriter(QRunnable):
             if self.separately:
                 for block in self.blocks:
                     filename = os.path.join(self.filename, block.block_name+'.json')
-                    with open(filename, 'w') as f:
+                    with open(filename, 'w', encoding='utf-8') as f:
                         json.dump(
                             block.toDict(),
                             f
@@ -35,7 +35,7 @@ class JsonWriter(QRunnable):
                     blocks.append(
                         block.toDict()
                     )
-                with open(self.filename, 'w') as f:
+                with open(self.filename, 'w', encoding='utf-8') as f:
                     json.dump(
                         blocks,
                         f
