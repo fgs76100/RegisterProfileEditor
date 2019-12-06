@@ -1,6 +1,6 @@
 # __version__.py
 
-__version__ = '0.2.2'
+__version__ = '0.2.3'
 
 
 # Revisions
@@ -25,5 +25,8 @@ __version__ = '0.2.2'
 #       // 4. add analyzer menu to reload address
 #
 # 0.2.2 // 1. fix multi-selection value change bug
+#
+# 0.2.3 // 1. add utf-8 encoding to json parser
+#       // 2. add error handling to FieldView linting
 
 
