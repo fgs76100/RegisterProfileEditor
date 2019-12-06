@@ -1,0 +1,13 @@
+.idea/
+*.json
+.vscode/
+*.html
+RegisterProfileEditor.tar.gz
+RegisterProfileEditor/IOHandle/__pycache__/
+RegisterProfileEditor/Views/__pycache__/
+RegisterProfileEditor/__pycache__/
+RegisterProfileEditor/resource.qrc
+RegisterProfileEditor/styles/__pycache__/
+__pycache__/
+build/
+venv/
