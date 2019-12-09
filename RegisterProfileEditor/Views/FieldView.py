@@ -59,6 +59,9 @@ class FieldView(QWidget):
         self.table.deleteKeyPress.connect(
             self.dataBeforeChangedEvent
         )
+        self.table.replaceSignal.connect(
+            self.dataBeforeChangedEvent
+        )
         self.create_ui()
 
     def show_reserved(self):

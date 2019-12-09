@@ -1,6 +1,6 @@
 # __version__.py
 
-__version__ = '0.2.3'
+__version__ = '0.2.4'
 
 
 # Revisions
@@ -11,7 +11,9 @@ __version__ = '0.2.3'
 #       // 2. RegisterProfileReader now parsing correct information
 #       // 3. remove some useless information in RegisterProfileWriter
 #       // 4. remove current useless column in register column
+#
 # 0.1.3 fix BlockView copy bug
+#
 # 0.1.4 // 1. fix HTMLWriter info bug
 #       // 2. fix textEdit Key_Shift bug
 #
@@ -29,5 +31,9 @@ __version__ = '0.2.3'
 # 0.2.3 // 1. add utf-8 encoding to json parser
 #       // 2. add error handling to FieldView linting
 #       // 3. fix dataChange bug in CommnadStack
-
+#
+# 0.2.4 // 1. fix replace bug
+#       // 2. add h,j,k,l motion like vim
+#       // 3. fix textEdit shift bug
+#
 

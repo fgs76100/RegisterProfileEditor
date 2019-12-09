@@ -220,7 +220,7 @@ class TreeShiftCommand(QUndoCommand):
 #         self.widget.itemFromIndex(self.index).setText(self.oldText)
 
 class ReplaceCommand(QUndoCommand):
-    def __init__(self, widget: QTableView, new: str, old: str, index:QModelIndex, description: str):
+    def __init__(self, widget: QTableView, new: str, old: str, index: QModelIndex, description: str):
         super(ReplaceCommand, self).__init__(description)
         self.widget = widget
         self.new = new

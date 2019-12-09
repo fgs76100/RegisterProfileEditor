@@ -4,7 +4,7 @@ from PyQt5.QtWidgets import QFormLayout, QFileDialog, QMessageBox, QLabel, QPush
 from PyQt5.QtWidgets import QUndoStack, QAbstractItemDelegate, QStyleOptionViewItem, QCompleter, QListWidgetItem
 from PyQt5.QtWidgets import QTabWidget, QApplication, QStyle, QGroupBox
 from PyQt5.QtCore import QModelIndex, Qt, QAbstractItemModel, QStringListModel, QSizeF, pyqtSignal, QRunnable
-from PyQt5.QtCore import QRegExp
+from PyQt5.QtCore import QRegExp, QEvent
 from PyQt5.QtGui import QValidator, QKeyEvent, QIntValidator, QTextCursor, QTextDocument, QAbstractTextDocumentLayout
 from PyQt5.QtGui import QTextCharFormat, QPainter, QFont, QPalette, QColor, QMouseEvent, QTextCursor
 import re
@@ -13,6 +13,14 @@ from .CommandStack import ReplaceCommand
 import json
 from collections import OrderedDict, deque
 import os
+
+key_remap = {
+    Qt.Key_J: Qt.Key_Down,
+    Qt.Key_K: Qt.Key_Up,
+    Qt.Key_H: Qt.Key_Left,
+    Qt.Key_L: Qt.Key_Right,
+
+}
 
 
 class HighlightDelegate(QStyledItemDelegate):
@@ -303,8 +311,8 @@ class TextEdit(QTextEdit):
                 self.focusPreviousChild()
                 self.focusNextChild()
                 return
-        else:
-            super(TextEdit, self).keyPressEvent(event)
+
+        super(TextEdit, self).keyPressEvent(event)
 
     def text(self):
         return self.toPlainText()
@@ -314,6 +322,7 @@ class ListView(QListWidget):
 
     def __init__(self, parent=None):
         super(ListView, self).__init__(parent=parent)
+        self.viewport().installEventFilter(self)
 
     def mouseDoubleClickEvent(self, *args, **kwargs):
         # text = self.currentItem().text()
@@ -321,6 +330,16 @@ class ListView(QListWidget):
         self.clearFocus()
         self.focusPreviousChild()
         self.focusNextChild()
+
+    def keyPressEvent(self, e: QKeyEvent):
+        key = e.key()
+        if key in key_remap.keys():
+            e = QKeyEvent(
+                QEvent.KeyPress, key_remap.get(key), e.modifiers(), e.text()
+            )
+        if e.modifiers() == Qt.ControlModifier:
+            return
+        super(ListView, self).keyPressEvent(e)
 
 
 class SearchAndReplace(QDialog):
@@ -393,6 +412,7 @@ class SearchAndReplace(QDialog):
 class TableView(QTableView):
 
     deleteKeyPress = pyqtSignal(QModelIndex, str, str)
+    replaceSignal = pyqtSignal(QModelIndex, str, str)
 
     def __init__(self, parent):
         super(TableView, self).__init__(parent=parent)
@@ -525,13 +545,9 @@ class TableView(QTableView):
         else:
             pattern = re.compile(textToSearch, re.IGNORECASE)
         new = pattern.sub(textToReplace, old)
-        self.undoStack.push(ReplaceCommand(
-            widget=self,
-            new=new,
-            old=old,
-            index=index,
-            description='table replace command'
-        ))
+        self.replaceSignal.emit(
+            index, new, old
+        )
         self.matches.popleft()
         self.incr += 1
         if not self.matches:
@@ -556,30 +572,50 @@ class TableView(QTableView):
         state = self.state()
         key = e.key()
         index = self.currentIndex()
-        if key == Qt.Key_N:
-            self.nextMatch()
-            return
-        # if e.modifiers() == Qt.ControlModifier and key == Qt.Key_R:
-        #     self.dialog.show()
-        elif key == Qt.Key_R:
-            if self.dialog.isVisible():
+        if self.dialog.isVisible():
+            if key == Qt.Key_N:
+                self.nextMatch()
+                return
+            elif key == Qt.Key_R:
                 self.replace()
                 return
 
         if isinstance(self.focusWidget(), QTextEdit):
             if key == Qt.Key_Tab:
                 if state == QAbstractItemView.EditingState:
-                    self.closeEditor(None, QAbstractItemDelegate.EditNextItem)
+                    self.commitData(self.focusWidget())
+                    self.closeEditor(
+                        self.focusWidget(),
+                        QAbstractItemDelegate.EditNextItem
+                    )
                     return
 
             if key == Qt.Key_Backtab:  # shift + tab
                 if state == QAbstractItemView.EditingState:
-                    self.closeEditor(None, QAbstractItemDelegate.EditPreviousItem)
+                    self.commitData(self.focusWidget())
+                    self.closeEditor(
+                        self.focusWidget(),
+                        QAbstractItemDelegate.EditPreviousItem
+                    )
                     return
+
+        if state == QAbstractItemView.EditingState:
+            if e.modifiers() == Qt.ControlModifier:
+                if key in key_remap:
+                    self.commitData(self.focusWidget())
+                    self.closeEditor(self.focusWidget(), QAbstractItemDelegate.SubmitModelCache)
+                    e = QKeyEvent(QEvent.KeyPress, key_remap.get(key), e.modifiers(), e.text())
+                    super(TableView, self).keyPressEvent(e)
+                    self.edit(self.currentIndex())
+                    return
+
         if state == QAbstractItemView.NoEditTriggers:
             if key in (Qt.Key_I, Qt.Key_S):
                 self.edit(index)
                 return
+
+            if key in key_remap.keys():
+                e = QKeyEvent(QEvent.KeyPress, key_remap.get(key), e.modifiers(), e.text())
 
             if key == Qt.Key_G:  # press shift+g go to bottom of row
                 if e.modifiers() == Qt.ShiftModifier:
@@ -593,18 +629,7 @@ class TableView(QTableView):
             if key == Qt.Key_Delete or key == Qt.Key_D:
                 self.deleteKeyPress.emit(self.currentIndex(), '', '')
                 return
-
-        pre_index = index
-
         super(TableView, self).keyPressEvent(e)
-
-        index = self.currentIndex()
-
-        if pre_index == index:
-            return
-        if state == QAbstractItemView.EditingState:
-            if e.key() in (Qt.Key_Up, Qt.Key_Down):
-                self.edit(index)
 
 
 class TreeView(QTreeView):
@@ -647,6 +672,11 @@ class TreeView(QTreeView):
                 # )
                 self.edit(index)
                 return
+
+            if key in key_remap.keys():
+                e = QKeyEvent(
+                    QEvent.KeyPress, key_remap.get(key), e.modifiers(), e.text()
+                )
 
             if key == Qt.Key_G:  # press shift+g go to bottom of row
                 if e.modifiers() == Qt.ShiftModifier:
