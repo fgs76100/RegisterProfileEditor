@@ -160,7 +160,7 @@ field_contextmenu = [
     ),
     dict(
         label='Search and Replace',
-        shortcut='Ctrl+R',
+        shortcut='Ctrl+S',
         action='searchAndReplace',
         icon='fa.search'
     ),
@@ -331,16 +331,15 @@ menubar_configs = [
         "Edit": [
             dict(
                 text='Undo',
-                shortcut="Ctrl+Z",
+                shortcut=['Ctrl+Z', "U"],
                 action='undo',
                 icon='fa.undo'
             ),
             dict(
                 text='Redo',
-                shortcut="Ctrl+Shift+Z",
+                shortcut=["Ctrl+Shift+Z", "Ctrl+R", "Ctrl+Y"],
                 action='redo',
                 icon="fa.repeat"
-
             ),
 
         ]
@@ -349,7 +348,6 @@ menubar_configs = [
         "Style": [
             dict(
                 text='Font',
-                # shortcut=None,
                 action='selectFont',
                 icon='fa.font'
             ),

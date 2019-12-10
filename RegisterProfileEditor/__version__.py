@@ -36,4 +36,5 @@ __version__ = '0.2.4'
 #       // 2. add h,j,k,l motion like vim
 #       // 3. fix textEdit shift bug
 #
+# 0.2.5 // add more vim-like motion
 

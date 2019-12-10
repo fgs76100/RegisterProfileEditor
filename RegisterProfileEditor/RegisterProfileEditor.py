@@ -163,7 +163,11 @@ class App(QMainWindow):
                         menu.addMenu(submenu)
                         continue
                     action = QAction(text, self)
-                    action.setShortcut(sc)
+                    if isinstance(sc, list):
+                        action.setShortcuts(sc)
+                    else:
+                        action.setShortcut(sc)
+
                     if icon:
                         action.setIcon(
                             qta.icon(

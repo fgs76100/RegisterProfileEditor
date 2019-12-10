@@ -322,7 +322,6 @@ class ListView(QListWidget):
 
     def __init__(self, parent=None):
         super(ListView, self).__init__(parent=parent)
-        self.viewport().installEventFilter(self)
 
     def mouseDoubleClickEvent(self, *args, **kwargs):
         # text = self.currentItem().text()
@@ -337,9 +336,13 @@ class ListView(QListWidget):
             e = QKeyEvent(
                 QEvent.KeyPress, key_remap.get(key), e.modifiers(), e.text()
             )
-        if e.modifiers() == Qt.ControlModifier:
-            return
         super(ListView, self).keyPressEvent(e)
+
+    def event(self, e: QEvent):
+        if e.type() == QEvent.KeyPress:
+            if e.modifiers() == Qt.ControlModifier:
+                return False
+        return super(ListView, self).event(e)
 
 
 class SearchAndReplace(QDialog):
@@ -580,31 +583,12 @@ class TableView(QTableView):
                 self.replace()
                 return
 
-        if isinstance(self.focusWidget(), QTextEdit):
-            if key == Qt.Key_Tab:
-                if state == QAbstractItemView.EditingState:
-                    self.commitData(self.focusWidget())
-                    self.closeEditor(
-                        self.focusWidget(),
-                        QAbstractItemDelegate.EditNextItem
-                    )
-                    return
-
-            if key == Qt.Key_Backtab:  # shift + tab
-                if state == QAbstractItemView.EditingState:
-                    self.commitData(self.focusWidget())
-                    self.closeEditor(
-                        self.focusWidget(),
-                        QAbstractItemDelegate.EditPreviousItem
-                    )
-                    return
-
         if state == QAbstractItemView.EditingState:
             if e.modifiers() == Qt.ControlModifier:
                 if key in key_remap:
                     self.commitData(self.focusWidget())
-                    self.closeEditor(self.focusWidget(), QAbstractItemDelegate.SubmitModelCache)
-                    e = QKeyEvent(QEvent.KeyPress, key_remap.get(key), e.modifiers(), e.text())
+                    self.closeEditor(self.focusWidget(), QAbstractItemDelegate.NoHint)
+                    e = QKeyEvent(QEvent.KeyPress, key_remap.get(key), Qt.NoModifier, e.text())
                     super(TableView, self).keyPressEvent(e)
                     self.edit(self.currentIndex())
                     return
